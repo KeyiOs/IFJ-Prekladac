@@ -26,6 +26,7 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value){
 
             Token->Value.String = NULL;
             Token->Value.String = (char*) malloc(Length*sizeof(char));
+            if(Token->Value.String == NULL) return NULL;
             for(int i=0; i<Length; i++) Token->Value.String[i] = '\0';
 
             strcpy(Token->Value.String,Value.String);
@@ -43,15 +44,102 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value){
     return Token->Following;
 }
 
-/*
-/   String - Pridat escape sekvencie
-/   Funkcia na stringy -> ($identifikator, "String", funkcia)
-/   Optimalizovat
-*/
+int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
+    char *String = (char*) malloc(10*sizeof(char));
+    if(String == NULL) return 99;
+
+    int Length = 0;
+    for(int i=0; i<10; i++) String[Length+i] = '\0';
+
+    switch(Type){
+        case 1:
+            *Character = getchar();
+            while(*Character != '"'){
+                if(Length%10 == 9) {
+                    String = (char*) realloc(String, Length+10);
+                    if(String == NULL) return 99;
+                    for(int i=0; i<10; i++) String[Length+i] = '\0';
+                }
+                String[Length] = *Character;
+                Length++;
+                *Character = getchar();
+            }
+            *Character = getchar();
+            break;
+        case 3: // Datatypes
+            *Character = getchar();
+            while('a' <= *Character && *Character <= 'z'){
+                if(Length == 6) return 1;
+                String[Length] = *Character;
+                Length++;
+                *Character = getchar();
+            }
+            break;
+        case 2: // Identificators
+        case 4: // Functions && Keywords
+            if(Type == 2) *Character = getchar();
+            if((65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Including invalid first symbol
+            while(*Character != ' ' && *Character != EOF && *Character != 10){
+                if((48 > *Character || *Character > 57) && (65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1;   // Added numbers as viable symbols
+                if(Length%10 == 9) {
+                    String = (char*) realloc(String, Length+10);
+                    if(String == NULL) return 99;
+                    for(int i=0; i<10; i++) String[Length+i] = '\0';
+                }
+                String[Length] = *Character;
+                Length++;
+                *Character = getchar();
+            }
+            break;
+        default:
+            break;
+    }
+
+    int KeyWord = 0;
+    switch(Type){
+        case 3: // Datatypes
+            if(!strcmp(String,"float")) *Token = T_Assign(*Token, T_TYPE_FLOAT_KEYWORD, Value);
+            else if(!strcmp(String,"int")) *Token = T_Assign(*Token, T_TYPE_INT_KEYWORD, Value);
+            else if(!strcmp(String,"string")) *Token = T_Assign(*Token, T_TYPE_STRING_KEYWORD, Value);
+            else return 1;
+            break;
+        case 4: // Functions && Keywords
+            if(!strcmp(String, "function")) KeyWord = 4;
+            else if(!strcmp(String, "return")) KeyWord = 5;
+            else if(!strcmp(String, "while")) KeyWord = 6;
+            else if(!strcmp(String, "void")) KeyWord = 7;
+            else if(!strcmp(String, "else")) KeyWord = 8;
+            else if(!strcmp(String, "if")) KeyWord = 9;
+            break;
+        default:
+            break;
+    }
+
+    if(Type != 3){
+        Value.String = NULL;
+        Value.String = (char*) malloc(Length*sizeof(char));
+        if(Value.String == NULL) return 99;
+        for(int i=0; i<Length; i++) Value.String[i] = '\0';
+
+        strcpy(Value.String,String);
+        free(String);
+
+        if(Type == 1) *Token = T_Assign(*Token, T_TYPE_STRING_DATATYPE, Value);
+        else if(Type == 2) *Token = T_Assign(*Token, T_TYPE_VARIABLE, Value);
+        else if(Type == 4){
+            if(KeyWord == 0) *Token = T_Assign(*Token, T_TYPE_FUNCTION, Value);
+            else *Token = T_Assign(*Token, KeyWord, Value);
+        }
+        free(Value.String);
+    } else free(String);
+
+    return 0;
+}
 
 int Scan(_TOKEN_ **Token){
     Token_Value Value;
     int Length = 0;
+    int ERR = 0;
 
     int Character = getchar();
 
@@ -68,68 +156,12 @@ int Scan(_TOKEN_ **Token){
             Character = getchar();
             break;
         case '"':   // String
-            char *String1 = (char*) malloc(5*sizeof(char));
-            if(String1 == NULL) return 99;
-
-            Length = 0;
-            for(int i=0; i<5; i++) String1[Length+i] = '\0';
-
-            Character = getchar();
-            while(Character != '"'){
-                if(Length%5 == 4) {
-                    String1 = (char*) realloc(String1, Length+5);
-                    if(String1 == NULL) return 99;
-                    for(int i=0; i<5; i++) String1[Length+i] = '\0';
-                }
-                String1[Length] = Character;
-                Length++;
-                Character = getchar();
-            }
-
-            Value.String = NULL;
-            Value.String = (char*) malloc(Length*sizeof(char));
-            for(int i=0; i<Length; i++) Value.String[i] = '\0';
-
-            strcpy(Value.String,String1);
-            free(String1);
-
-            *Token = T_Assign(*Token, T_TYPE_STRING_DATATYPE, Value);
-            free(Value.String);
-
-            Character = getchar();
+            ERR = Strings(&Character, Value, Token, 1);
+            if(ERR != 0) return ERR;
             break;
         case '$':   // Variable Identificator
-            char *String2 = (char*) malloc(5*sizeof(char));
-            if(String2 == NULL) return 99;
-
-            Length = 0;
-            for(int i=0; i<5; i++) String2[Length+i] = '\0';
-
-            Character = getchar();
-            if((65 > Character || Character > 90) && (97 > Character || Character > 122) && Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Including invalid first symbol
-            while(Character != ' ' && Character != EOF && Character != 10){
-                if((48 > Character || Character > 57) && (65 > Character || Character > 90) && (97 > Character || Character > 122) && Character != '_') return 1;   // Added numbers as viable symbols
-                if(Length%5 == 4) {
-                    String2 = (char*) realloc(String2, Length+5);
-                    if(String2 == NULL) return 99;
-                    for(int i=0; i<5; i++) String2[Length+i] = '\0';
-                }
-                String2[Length] = Character;
-                Length++;
-                Character = getchar();
-            }
-
-            Value.String = NULL;
-            Value.String = (char*) malloc(Length*sizeof(char));
-            for(int i=0; i<Length; i++) Value.String[i] = '\0';
-
-            strcpy(Value.String,String2);
-            free(String2);
-
-            *Token = T_Assign(*Token, T_TYPE_VARIABLE, Value);
-            free(Value.String);
-
-            Character = getchar();
+            ERR = Strings(&Character, Value, Token, 2);
+            if(ERR != 0) return ERR;
             break;
         case '(':
             *Token = T_Assign(*Token, T_TYPE_OPEN_BRACKET, Value);
@@ -166,7 +198,10 @@ int Scan(_TOKEN_ **Token){
                     Character = getchar();
                     if(Character == '*'){
                         Character = getchar();
-                        if(Character == '/') break;
+                        if(Character == '/'){
+                            Character = getchar();
+                            break;
+                        }
                     }
                 }
                 break;
@@ -213,21 +248,8 @@ int Scan(_TOKEN_ **Token){
             Character = getchar();
             break;
         case '?':   // Datatype Identificator
-            char String3[7];
-            for(int i=0; i<7; i++) String3[i] = '\0';
-
-            Length = 0;
-            Character = getchar();
-            while('a' <= Character && Character <= 'z'){
-                if(Length == 6) return 1;
-                String3[Length] = Character;
-                Length++;
-                Character = getchar();
-            }
-            if(!strcmp(String3,"float")) *Token = T_Assign(*Token, T_TYPE_FLOAT_KEYWORD, Value);
-            else if(!strcmp(String3,"int")) *Token = T_Assign(*Token, T_TYPE_INT_KEYWORD, Value);
-            else if(!strcmp(String3,"string")) *Token = T_Assign(*Token, T_TYPE_STRING_KEYWORD, Value);
-            else return 1;
+            ERR = Strings(&Character, Value, Token, 3);
+            if(ERR != 0) return ERR;
             break;
         case '{':
             *Token = T_Assign(*Token, T_TYPE_OPEN_CURLY_BRACKET, Value);
@@ -262,45 +284,8 @@ int Scan(_TOKEN_ **Token){
             break;
         case 'a' ... 'z':
         case 'A' ... 'Z':
-            char *String4 = (char*) malloc(5*sizeof(char));
-            if(String4 == NULL) return 99;
-
-            Length = 0;
-            for(int i=0; i<5; i++) String4[Length+i] = '\0';
-
-            if((65 > Character || Character > 90) && (97 > Character || Character > 122) && Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Including invalid first symbol
-            while(Character != ' ' && Character != EOF && Character != 10){
-                if((48 > Character || Character > 57) && (65 > Character || Character > 90) && (97 > Character || Character > 122) && Character != '_') return 1;   // Added numbers as viable symbols
-                if(Length%5 == 4) {
-                    String4 = (char*) realloc(String4, Length+5);
-                    if(String4 == NULL) return 99;
-                    for(int i=0; i<5; i++) String4[Length+i] = '\0';
-                }
-                String4[Length] = Character;
-                Length++;
-                Character = getchar();
-            }
-
-            Value.String = NULL;
-            Value.String = (char*) malloc(Length*sizeof(char));
-            for(int i=0; i<Length; i++) Value.String[i] = '\0';
-
-            int KeyWord = 0;
-            if(!strcmp(String4, "function")) KeyWord = 4;
-            else if(!strcmp(String4, "return")) KeyWord = 5;
-            else if(!strcmp(String4, "while")) KeyWord = 6;
-            else if(!strcmp(String4, "void")) KeyWord = 7;
-            else if(!strcmp(String4, "else")) KeyWord = 8;
-            else if(!strcmp(String4, "if")) KeyWord = 9;
-
-            strcpy(Value.String,String4);
-            free(String4);
-
-            if(KeyWord == 0) *Token = T_Assign(*Token, T_TYPE_FUNCTION, Value);
-            else *Token = T_Assign(*Token, KeyWord, Value);
-            free(Value.String);
-
-            Character = getchar();
+            ERR = Strings(&Character, Value, Token, 4);
+            if(ERR != 0) return ERR;
             break;
         case EOF:   // End of File
             *Token = T_Assign(*Token, T_TYPE_EOF, Value);
