@@ -52,13 +52,106 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
     for(int i=0; i<10; i++) String[Length+i] = '\0';
 
     switch(Type){
-        case 1:
+        case 1: // String
             *Character = getchar();
             while(*Character != '"'){
+                if(*Character == '$') return 1; // $ Moze byt v stringu iba cez escape sekvenciu
                 if(Length%10 == 9) {
                     String = (char*) realloc(String, Length+10);
                     if(String == NULL) return 99;
                     for(int i=0; i<10; i++) String[Length+i] = '\0';
+                }
+                if(*Character == '\\'){
+                    *Character = getchar();
+                    if(*Character == '"' || *Character == '\\'){
+                        String[Length] = *Character;
+                        Length++;
+                        *Character = getchar();
+                        continue;
+                    } else if(*Character == 'n'){
+                        String[Length] = 10;
+                        Length++;
+                        *Character = getchar();
+                        continue;
+                    } else if(*Character == 't'){
+                        String[Length] = 9;
+                        Length++;
+                        *Character = getchar();
+                        continue;
+                    } else if(*Character == 'x'){   // Sestnactkova escape sekvencia
+                        int ES[] = {'\0','\0'}; // ES - Escape Sekvence
+                        int Flag = 0;   // Neplatna escape sekvencia
+
+                        *Character = getchar();
+                        for(int a = 0; a < 2; a++){
+                            if(48 > *Character || (*Character > 57 && 65 > *Character) || (*Character > 70 && 97 > *Character) || *Character > 102){    // (!= 0-9 && != a-f && != A-F)
+                                Flag = 1;
+                                String[Length] = 92;
+                                String[Length+1] = 120;
+                                Length += 2;
+                                for(int b = 0; b < a; b++){
+                                    String[Length] = ES[b];
+                                    Length++;
+                                }
+                                String[Length] = *Character;
+                                *Character = getchar();
+                                Length++;
+                                break;
+                            }
+
+                            ES[a] = *Character;
+                            *Character = getchar();
+                        }
+                        if(Flag == 1) continue;
+
+                        for(int a = 0; a < 2; a++){
+                            if(ES[a] > 70) ES[a] = ES[a] - 87;
+                            else if(ES[a] > 57) ES[a] = ES[a] - 55;
+                            else ES[a] = ES[a] - 48;
+                        }
+
+                        int Converted = ES[0] * 16 + ES[1];
+                        if(32 > Converted || Converted > 126) return 1;
+
+                        String[Length] = Converted;
+                        Length++;
+                        continue;
+                    } else if('0' <= *Character && *Character <= '2'){  // Desiatkova escape sekvencia
+                        int ES[] = {'\0','\0','\0'}; // ES - Escape Sekvence
+                        int Flag = 0;   // Neplatna escape sekvencia
+
+                        for(int a = 0; a < 3; a++){
+                            if(48 > *Character || *Character > 57){
+                                Flag = 1;
+                                String[Length] = 92;
+                                Length++;
+                                for(int b = 0; b < a; b++){
+                                    String[Length] = ES[b];
+                                    Length++;
+                                }
+                                String[Length] = *Character;
+                                *Character = getchar();
+                                Length++;
+                                break;
+                            }
+
+                            ES[a] = *Character;
+                            *Character = getchar();
+                        }
+                        if(Flag == 1) continue;
+
+                        int Converted = (ES[0] - 48) * 100 + (ES[1] - 48) * 10 + (ES[2] - 48);
+                        if(32 > Converted || Converted > 126) return 1;
+
+                        String[Length] = Converted;
+                        Length++;
+                        continue;
+                    } else{
+                        String[Length] = '\\';
+                        String[Length+1] = *Character;
+                        Length += 2;
+                        *Character = getchar();
+                    }
                 }
                 String[Length] = *Character;
                 Length++;
@@ -66,7 +159,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
             }
             *Character = getchar();
             break;
-        case 3: // Datatypes
+        case 3: // Datovy typ
             *Character = getchar();
             while('a' <= *Character && *Character <= 'z'){
                 if(Length == 6) return 1;
@@ -75,12 +168,12 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
                 *Character = getchar();
             }
             break;
-        case 2: // Identificators
-        case 4: // Functions && Keywords
+        case 2: // Premenna
+        case 4: // Funkcie && Klucove slova
             if(Type == 2) *Character = getchar();
-            if((65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Including invalid first symbol
+            if((65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Chybny prvy symbol
             while(*Character != ' ' && *Character != EOF && *Character != 10){
-                if((48 > *Character || *Character > 57) && (65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1;   // Added numbers as viable symbols
+                if((48 > *Character || *Character > 57) && (65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1;   // Chybny symbol v postupnosti (Pridane cisla)
                 if(Length%10 == 9) {
                     String = (char*) realloc(String, Length+10);
                     if(String == NULL) return 99;
@@ -97,13 +190,13 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
 
     int KeyWord = 0;
     switch(Type){
-        case 3: // Datatypes
+        case 3: // Datovy typ
             if(!strcmp(String,"float")) *Token = T_Assign(*Token, T_TYPE_FLOAT_KEYWORD, Value);
             else if(!strcmp(String,"int")) *Token = T_Assign(*Token, T_TYPE_INT_KEYWORD, Value);
             else if(!strcmp(String,"string")) *Token = T_Assign(*Token, T_TYPE_STRING_KEYWORD, Value);
             else return 1;
             break;
-        case 4: // Functions && Keywords
+        case 4: // Funkcie && Klucove slova
             if(!strcmp(String, "function")) KeyWord = 4;
             else if(!strcmp(String, "return")) KeyWord = 5;
             else if(!strcmp(String, "while")) KeyWord = 6;
@@ -138,7 +231,6 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
 
 int Scan(_TOKEN_ **Token){
     Token_Value Value;
-    int Length = 0;
     int ERR = 0;
 
     int Character = getchar();
@@ -150,7 +242,7 @@ int Scan(_TOKEN_ **Token){
         case ' ':   //
             Character = getchar();
             break;
-        case 10:    // New Line
+        case 10:    // Novy riadok
         case 13:    //
             *Token = T_Assign(*Token, T_TYPE_EOL, Value);
             Character = getchar();
@@ -159,7 +251,7 @@ int Scan(_TOKEN_ **Token){
             ERR = Strings(&Character, Value, Token, 1);
             if(ERR != 0) return ERR;
             break;
-        case '$':   // Variable Identificator
+        case '$':   // Premenna
             ERR = Strings(&Character, Value, Token, 2);
             if(ERR != 0) return ERR;
             break;
@@ -189,11 +281,11 @@ int Scan(_TOKEN_ **Token){
             break;
         case '/':
             Character = getchar();
-            if(Character == '/'){   // Line Comment
+            if(Character == '/'){   // Riadkovy komentar
                 while(Character != EOF && Character != 10 && Character != 13) Character = getchar();
                 break;
             }
-            else if(Character == '*') { // Multiline Comment
+            else if(Character == '*') { // Viacriadkovy komentar
                 while(Character != EOF) {
                     Character = getchar();
                     if(Character == '*'){
@@ -247,7 +339,7 @@ int Scan(_TOKEN_ **Token){
             *Token = T_Assign(*Token, T_TYPE_GREATER, Value);
             Character = getchar();
             break;
-        case '?':   // Datatype Identificator
+        case '?':   // Datovy typ
             ERR = Strings(&Character, Value, Token, 3);
             if(ERR != 0) return ERR;
             break;
@@ -259,10 +351,10 @@ int Scan(_TOKEN_ **Token){
             *Token = T_Assign(*Token, T_TYPE_CLOSED_CURLY_BRACKET, Value);
             Character = getchar();
             break;
-        case '0' ... '9':   // Integer or Float Values
+        case '0' ... '9':   // Integer alebo float
             int Float = 0;
             float Number = 0.0;
-            Length = 0;
+            int Length = 0;
             while(Character != ' ' && Character != 10 && Character != EOF){
                 if((48 > Character || Character > 57) && Character != '.') return 1;
                 if(Float == 1) Length ++;
@@ -287,7 +379,7 @@ int Scan(_TOKEN_ **Token){
             ERR = Strings(&Character, Value, Token, 4);
             if(ERR != 0) return ERR;
             break;
-        case EOF:   // End of File
+        case EOF:   // Koniec vstupu
             *Token = T_Assign(*Token, T_TYPE_EOF, Value);
             return 0;
             break;
