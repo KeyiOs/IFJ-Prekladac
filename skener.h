@@ -17,4 +17,4 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value);
 int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type);
 int Scan(_TOKEN_ **Token);
 
-#endif
+#endifs
