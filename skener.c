@@ -60,7 +60,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type){
                     String = (char*) realloc(String, Length+10);
                     if(String == NULL) return 99;
                     for(int i=0; i<10; i++) String[Length+i] = '\0';
-                }s
+                }
                 if(*Character == '\\'){
                     *Character = getchar();
                     if(*Character == '"' || *Character == '\\'){
