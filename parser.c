@@ -56,7 +56,7 @@ int main(){
     if(ERR != 0){                                                       //
         T_Free(T_First);;                                               //
         ERR_Handler(ERR);                                               //
-         return ERR;                                                     //
+        return ERR;                                                     //
     }                                                                   //
     Token = T_First;                                                    //
 
