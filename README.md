@@ -4,5 +4,5 @@ Vsetky #include "subor" sa davaju do .h
 
 Strukturi su ulozene v parser.h
 
-Spustanie skenera: Scan(Token, Source, Character);
-  Vracia int ERROR
+Spustanie skenera: if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+  - Vracia int ERROR
