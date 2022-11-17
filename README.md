@@ -1,6 +1,6 @@
 # IFJ-Prekladac
 
-Vsetky #include "subor" sa davaju do .h
+V .c suboroch staci jeden #include "parser.h"
 
 Strukturi su ulozene v parser.h
 
