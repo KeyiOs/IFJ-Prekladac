@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void ERR_Handler(int ERR) {
+void ERR_Handler(int ERR, int Line, int Token_Number) {
     switch(ERR) {
         case 1:
-            fprintf(stderr, "Lexical error: Unexpected character or series of characters.\n");
+            fprintf(stderr, "Lexical error: Unexpected character or series of characters. [Line %i]\n", Line);
             break;
         case 2:
             fprintf(stderr, "Syntactical error.\n");
