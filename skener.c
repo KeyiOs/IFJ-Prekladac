@@ -13,7 +13,7 @@
 extern int Line;
 extern int Token_Number;
 
-int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type, FILE* Source){    
+int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* Source){    
     char *String = (char*) malloc(10*sizeof(char));
     if(String == NULL) return 99;
 
@@ -197,11 +197,11 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type, FILE* 
         strcpy(Value.String,String);
         free(String);
     }
-    if(Type == 1) *Token = T_Assign(*Token, T_TYPE_STRING_DATATYPE, Value, 0);
-    else if(Type == 2) *Token = T_Assign(*Token, T_TYPE_VARIABLE, Value, 0);
+    if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, Value, 0);
+    else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, Value, 0);
     else if(Type == 4){
-        if(KeyWord == 0) *Token = T_Assign(*Token, T_TYPE_FUNCTION, Value, 0);
-        else *Token = T_Assign(*Token, T_TYPE_KEYWORD, Value, KeyWord);
+        if(KeyWord == 0) Token = T_Assign(Token, T_TYPE_FUNCTION, Value, 0);
+        else Token = T_Assign(Token, T_TYPE_KEYWORD, Value, KeyWord);
     }
     free(Value.String);
 
@@ -277,7 +277,7 @@ int Comment(int *Character, FILE* Source){
     return 0;
 }
 
-int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
+int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
     Token_Value Value;
     int ERR = 0;
 
@@ -299,7 +299,7 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             if(*Character != '=') return 1;
             *Character = getc(Source);
             if(*Character != '=') return 1;
-            *Token = T_Assign(*Token, T_TYPE_TRIPLE_EQUALS_NEG, Value, 0);
+            Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS_NEG, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -314,65 +314,65 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             return 0;
             break;
         case '(':
-            *Token = T_Assign(*Token, T_TYPE_OPEN_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_OPEN_BRACKET, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ')':
-            *Token = T_Assign(*Token, T_TYPE_CLOSED_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CLOSED_BRACKET, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '*':
-            *Token = T_Assign(*Token, T_TYPE_MULTIPLICATION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_MULTIPLICATION, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '+':
-            *Token = T_Assign(*Token, T_TYPE_PLUS, Value, 0);
+            Token = T_Assign(Token, T_TYPE_PLUS, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ',':
-            *Token = T_Assign(*Token, T_TYPE_COLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_COLON, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '-':
-            *Token = T_Assign(*Token, T_TYPE_MINUS, Value, 0);
+            Token = T_Assign(Token, T_TYPE_MINUS, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '.':
-            *Token = T_Assign(*Token, T_TYPE_CONCATENATION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CONCATENATION, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '/':
             *Character = getc(Source);
             if(Comment(&*Character, Source) == 1) return Scan(Token, Source, Character);
-            *Token = T_Assign(*Token, T_TYPE_DIVISION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_DIVISION, Value, 0);
             return 0;
             break;
         case ':':
-            *Token = T_Assign(*Token, T_TYPE_COLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_COLON, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ';':
-            *Token = T_Assign(*Token, T_TYPE_SEMICOLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_SEMICOLON, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '<':
             *Character = getc(Source);
             if(*Character == '='){
-                *Token = T_Assign(*Token, T_TYPE_SMALLER_EQUAL, Value, 0);
+                Token = T_Assign(Token, T_TYPE_SMALLER_EQUAL, Value, 0);
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            *Token = T_Assign(*Token, T_TYPE_SMALLER, Value, 0);
+            Token = T_Assign(Token, T_TYPE_SMALLER, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -381,23 +381,23 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             if(*Character == '='){
                 *Character = getc(Source);
                 if(*Character != '=') return 1;
-                *Token = T_Assign(*Token, T_TYPE_TRIPLE_EQUALS, Value, 0);;
+                Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS, Value, 0);;
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            *Token = T_Assign(*Token, T_TYPE_EQUAL, Value, 0);
+            Token = T_Assign(Token, T_TYPE_EQUAL, Value, 0);
             return 0;
             break;
         case '>':
             *Character = getc(Source);
             if(*Character == '='){
-                *Token = T_Assign(*Token, T_TYPE_GREATER_EQUAL, Value, 0);
+                Token = T_Assign(Token, T_TYPE_GREATER_EQUAL, Value, 0);
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            *Token = T_Assign(*Token, T_TYPE_GREATER, Value, 0);
+            Token = T_Assign(Token, T_TYPE_GREATER, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -413,12 +413,12 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             return 0;
             break;
         case '{':
-            *Token = T_Assign(*Token, T_TYPE_OPEN_CURLY_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_OPEN_CURLY_BRACKET, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '}':
-            *Token = T_Assign(*Token, T_TYPE_CLOSED_CURLY_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CLOSED_CURLY_BRACKET, Value, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -438,13 +438,13 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             }
             if(Float == 0){
                 Value.Integer = Number;
-                *Token = T_Assign(*Token, T_TYPE_INT_DATATYPE, Value, 0);
+                Token = T_Assign(Token, T_TYPE_INT_DATATYPE, Value, 0);
                 return 0;
                 break;
             }
             for(int a = 0; a < Length; a ++) Number = Number / 10;
             Value.Float = Number;
-            *Token = T_Assign(*Token, T_TYPE_FLOAT_DATATYPE, Value, 0);
+            Token = T_Assign(Token, T_TYPE_FLOAT_DATATYPE, Value, 0);
             return 0;
             break;
         case 'a' ... 'z':
@@ -454,7 +454,7 @@ int Scan(_TOKEN_ **Token, FILE* Source, int *Character){
             return 0;
             break;
         case EOF:   // Koniec vstupu
-            *Token = T_Assign(*Token, T_TYPE_EOF, Value, 0);
+            Token = T_Assign(Token, T_TYPE_EOF, Value, 0);
             return 0;
             break;
         default:

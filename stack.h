@@ -2,19 +2,21 @@
  * IFJ Projekt 2021
  * @author <xkento00> Samuel Kentos
  */
+#include "parser.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#define __TOKEN__ struct Token_t
+#define _TOKEN_ struct Token
+#define _STACK_ struct Stack
 
 #ifndef STACK_PARSER_H
 #define STACK_PARSER_H
 
-void Stack_Init ( __TOKEN__ *Stack );
-__TOKEN__ *Stack_Create ( );
-__TOKEN__ *Stack_Push ( __TOKEN__ *Stack, __TOKEN__ *Token );
-__TOKEN__ *Stack_Pop ( __TOKEN__ *Stack );
+void Stack_Init ( _STACK_ *Stack );
+_STACK_ *Stack_Create ( );
+int Stack_Push ( _STACK_ *Stack, _TOKEN_ *Token );
+_STACK_ *Stack_Pop ( _STACK_ *Stack );
 
 #endif

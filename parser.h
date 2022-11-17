@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #define _TOKEN_ struct Token
+#define _STACK_ struct Stack
 
 #ifndef PARSER_CHECK
 #define PARSER_CHECK
@@ -90,13 +91,13 @@ struct Token {
 };
 
 struct Stack {
-    struct Token Previous;
-    struct Token Next;
+    struct Token Token;
+    struct Stack *Previous;
 };
 
 _TOKEN_ *T_Create();
 _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value, Token_Keyword Keyword);
 
-int Start(_TOKEN_ **Token, FILE* Source, int *Character);
+int Start(_TOKEN_ *Token, FILE* Source, int *Character);
 
 #endif  

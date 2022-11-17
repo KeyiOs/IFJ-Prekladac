@@ -15,7 +15,7 @@
 
 int Prolog(FILE* Source, int *Character);
 int Comment(int *Character, FILE* Source);
-int Strings(int *Character, Token_Value Value, _TOKEN_ **Token, int Type, FILE* Source);
-int Scan(_TOKEN_ **Token, FILE* Source, int *Character);
+int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* Source);
+int Scan(_TOKEN_ *Token, FILE* Source, int *Character);
 
 #endif

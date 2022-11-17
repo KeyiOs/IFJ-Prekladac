@@ -24,6 +24,8 @@
 / CTRL-H
 */
 
+#include "stack.h"
+
 int Line = 1;
 int Token_Number = 1;
 
@@ -70,13 +72,21 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value, Token_Keyw
     return Token;
 }
 
-int Start(_TOKEN_ **Token, FILE* Source, int *Character){
+int Start(_TOKEN_ *Token, FILE* Source, int *Character){
     int ERR;
-    for(int i = 0; i < 15; i++) if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+    _STACK_ *Stack = Stack_Create();
+    for(int i = 0; i < 3; i++) {
+        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+        Stack_Push(Stack, Token);
+    }
+    for(int i = 0; i < 3; i++) {
+        Stack = Stack_Pop(Stack);
+    }
 
-    if((*Token)->Type == T_TYPE_KEYWORD){
+    if(Token->Type == T_TYPE_KEYWORD){
         
     }
+
     return 0;
 }
 
@@ -91,7 +101,7 @@ int main(){
     int ERR = Prolog(Source, &Character);                               // Prolog
     if(ERR != 0) return ERR;                                            //
 
-    if((ERR = Start(&Token, Source, &Character)) != 0) {                // Analysis Start
+    if((ERR = Start(Token, Source, &Character)) != 0) {                 // Analysis Start
         ERR_Handler(ERR, Line, Token_Number);                           //
         return ERR;                                                     //
     }                                                                   //
