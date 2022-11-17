@@ -1,6 +1,6 @@
 # IFJ-Prekladac
 
-V .c suboroch staci jeden #include "parser.h"
+Vsetky subory inkludujte v .h
 
 Strukturi su ulozene v parser.h
 
