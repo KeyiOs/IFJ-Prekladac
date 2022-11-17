@@ -1,14 +1,33 @@
 /**
- * IFJ Projekt 2022
- * @author
+ * IFJ Projekt 2021
+ * @author <xhorac20> Andrej Horacek
  */
 
-#include <stdio.h>
+
 #include <stdbool.h>
 
-#ifndef GENERATOR_CHECK
-#define GENERATOR_CHECK
+#ifndef GENERATOR_H
+#define GENERATOR_H
 
-// HERE
+void G_BigStart();
+
+void G_BigEnd();
+
+void G_readi();
+
+void G_reads();
+
+void G_readf();
+
+void G_write();
+
+void G_intval();
+
+void G_strval();
+
+void G_strlen();
+
+void G_substring();
+
 
 #endif
