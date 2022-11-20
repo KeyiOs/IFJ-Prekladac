@@ -162,26 +162,26 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
             if(!strcmp(String, "function")) KeyWord = 1;
             else if(!strcmp(String, "return")) KeyWord = 2;
             else if(!strcmp(String, "while")) KeyWord = 3;
-            else if(!strcmp(String, "void")) KeyWord = 4;
-            else if(!strcmp(String, "else")) KeyWord = 5;
-            else if(!strcmp(String, "if")) KeyWord = 6;
+            else if(!strcmp(String, "else")) KeyWord = 4;
+            else if(!strcmp(String, "if")) KeyWord = 5;
 
-            else if(!strcmp(String, "substring")) KeyWord = 7;
-            else if(!strcmp(String, "floatval")) KeyWord = 8;
-            else if(!strcmp(String, "intval")) KeyWord = 9;
-            else if(!strcmp(String, "strval")) KeyWord = 10;
-            else if(!strcmp(String, "strlen")) KeyWord = 11;
-            else if(!strcmp(String, "write")) KeyWord = 12;
-            else if(!strcmp(String, "reads")) KeyWord = 13;
-            else if(!strcmp(String, "readi")) KeyWord = 14;
-            else if(!strcmp(String, "readf")) KeyWord = 15;
-            else if(!strcmp(String, "ord")) KeyWord = 16;
-            else if(!strcmp(String, "chr")) KeyWord = 17;
+            else if(!strcmp(String, "substring")) KeyWord = 6;
+            else if(!strcmp(String, "floatval")) KeyWord = 7;
+            else if(!strcmp(String, "intval")) KeyWord = 8;
+            else if(!strcmp(String, "strval")) KeyWord = 9;
+            else if(!strcmp(String, "strlen")) KeyWord = 10;
+            else if(!strcmp(String, "write")) KeyWord = 11;
+            else if(!strcmp(String, "reads")) KeyWord = 12;
+            else if(!strcmp(String, "readi")) KeyWord = 13;
+            else if(!strcmp(String, "readf")) KeyWord = 14;
+            else if(!strcmp(String, "ord")) KeyWord = 15;
+            else if(!strcmp(String, "chr")) KeyWord = 16;
 
-            else if(!strcmp(String,"string")) KeyWord = 18;
-            else if(!strcmp(String,"float")) KeyWord = 19;
+            else if(!strcmp(String, "string")) KeyWord = 17;
+            else if(!strcmp(String, "float")) KeyWord = 18;
+            else if(!strcmp(String, "void")) KeyWord = 19;
             else if(!strcmp(String, "null")) KeyWord = 20;
-            else if(!strcmp(String,"int")) KeyWord = 21;
+            else if(!strcmp(String, "int")) KeyWord = 21;
 
             break;
         default:
@@ -199,7 +199,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
     }
     if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, Value, 0);
     else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, Value, 0);
-    else if(Type == 4){
+    else if(Type == 3 || Type == 4){
         if(KeyWord == 0) Token = T_Assign(Token, T_TYPE_FUNCTION, Value, 0);
         else Token = T_Assign(Token, T_TYPE_KEYWORD, Value, KeyWord);
     }
@@ -223,7 +223,7 @@ int Prolog(FILE* Source, int *Character){
     }
     if(strcmp(String,"<?php")) {
         free(String);
-        return 1;
+        return 2;
     }
     
     while(*Character == ' ' || *Character == 9) *Character = getc(Source);
@@ -231,7 +231,7 @@ int Prolog(FILE* Source, int *Character){
         *Character = getc(Source);
         Line++;
     } else if(*Character == '/') {
-        if(Comment(&*Character, Source) == 0) return 1;
+        if(Comment(Character, Source) == 0) return 2;
         else {
             *Character = getc(Source);
             Line++;
@@ -304,12 +304,12 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             return 0;
             break;
         case '"':   // String
-            ERR = Strings(&*Character, Value, Token, 1, Source);
+            ERR = Strings(Character, Value, Token, 1, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case '$':   // Premenna
-            ERR = Strings(&*Character, Value, Token, 2, Source);
+            ERR = Strings(Character, Value, Token, 2, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
@@ -350,7 +350,7 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             break;
         case '/':
             *Character = getc(Source);
-            if(Comment(&*Character, Source) == 1) return Scan(Token, Source, Character);
+            if(Comment(Character, Source) == 1) return Scan(Token, Source, Character);
             Token = T_Assign(Token, T_TYPE_DIVISION, Value, 0);
             return 0;
             break;
@@ -405,10 +405,13 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             *Character = getc(Source);
             if(*Character == '>') {
                 *Character = getc(Source);
-                if(*Character == EOF) return 0;
+                if(*Character == EOF) {
+                    Token = T_Assign(Token, T_TYPE_EOF, Value, 0);
+                    return 0;
+                }
                 return 1;
             }
-            ERR = Strings(&*Character, Value, Token, 3, Source);
+            ERR = Strings(Character, Value, Token, 3, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
@@ -449,7 +452,7 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             break;
         case 'a' ... 'z':
         case 'A' ... 'Z':
-            ERR = Strings(&*Character, Value, Token, 4, Source);
+            ERR = Strings(Character, Value, Token, 4, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
