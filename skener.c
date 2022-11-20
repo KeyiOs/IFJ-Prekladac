@@ -195,7 +195,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
         for(int i=0; i<Length; i++) Value.String[i] = '\0';
 
         strcpy(Value.String,String);
-        free(String);
+        free(Value.String);
     }
     if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, Value, 0);
     else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, Value, 0);
@@ -203,7 +203,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
         if(KeyWord == 0) Token = T_Assign(Token, T_TYPE_FUNCTION, Value, 0);
         else Token = T_Assign(Token, T_TYPE_KEYWORD, Value, KeyWord);
     }
-    free(Value.String);
+    free(String);
 
     return 0;
 }
@@ -334,7 +334,7 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             return 0;
             break;
         case ',':
-            Token = T_Assign(Token, T_TYPE_COLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_COMMA, Value, 0);
             *Character = getc(Source);
             return 0;
             break;

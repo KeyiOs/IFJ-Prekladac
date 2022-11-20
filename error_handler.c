@@ -14,7 +14,7 @@ void ERR_Handler(int ERR, int Line, int Token_Number) {
             fprintf(stderr, "Lexical error: Unexpected character or series of characters. [Line %i]\n", Line);
             break;
         case 2:
-            fprintf(stderr, "Syntactical error.\n");
+            fprintf(stderr, "Syntactical error. [Token %i]\n", Token_Number);
             break;
         case 3:
             fprintf(stderr, "Semantic Error: Undefined function/variable or redefinition of function/variable.\n");
