@@ -6,3 +6,4 @@ Spustanie skenera: if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
   - Vracia int ERROR
   
   The One Piece is real!
+  - Actually FAKE info
