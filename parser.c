@@ -2,6 +2,7 @@
  * IFJ Projekt 2022
  * @author <xkento00> Samuel Kentoš
  */
+
 #include "error_handler.h"
 #include "skener.h"
 #include "parser.h"
@@ -29,33 +30,27 @@ _TOKEN_ *T_Create(){
 /*
  *  • Zapis hodnot do tokenu
  */
-_TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value, Token_Keyword Keyword){
+_TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword Keyword){
     Token->Type = Type;
     Token->Keyword = T_KEYWORD_NULL;
-    Token->Value.String = "\0";
+    Token->String = "\0";
     Token_Number++;
 
     switch(Type){
         case T_TYPE_STRING_DATATYPE:
         case T_TYPE_VARIABLE:
         case T_TYPE_FUNCTION:
-            int Length = strlen(Value.String);
+            int Length = strlen(String);
 
-            Token->Value.String = NULL;
-            Token->Value.String = (char*) malloc(Length*sizeof(char));
-            if(Token->Value.String == NULL) return NULL;
-            for(int i=0; i<Length; i++) Token->Value.String[i] = '\0';
+            Token->String = NULL;
+            Token->String = (char*) malloc(Length*sizeof(char));
+            if(Token->String == NULL) return NULL;
+            for(int i=0; i<Length; i++) Token->String[i] = '\0';
 
-            strcpy(Token->Value.String,Value.String);
+            strcpy(Token->String,String);
             break;
         case T_TYPE_KEYWORD:
             Token->Keyword = Keyword;
-            break;
-        case T_TYPE_FLOAT_DATATYPE:
-            Token->Value.Float = Value.Float;
-            break;
-        case T_TYPE_INT_DATATYPE:
-            Token->Value.Integer = Value.Integer;
             break;
         default:
             break;
@@ -257,7 +252,7 @@ int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character){
  */
 int Function(_TOKEN_ *Token, FILE* Source, int *Character, int Dive){
     int ERR;                                                                // Deklaracia
-    char *Name = Token->Value.String;                                       //
+    char *Name = Token->String;                                             //
     // TODO: Check Name                                                     //
     _PARAM_ *Params; // TODO: Get Tokens                                    //
 
@@ -295,12 +290,12 @@ int Variable(_TOKEN_ *Token, FILE* Source, int *Character){
     // TODO: Symtable Check                                                 //
     if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Rovna sa
     if(Token->Type != T_TYPE_EQUAL) {                                       //
-        // TODO: Analyza vyrazov + Pridat uz nacitanu premennu              //
+        // TODO: Analyza vyrazov + Pridat uz nacitanu premennu              // TODO: Odstranit
         while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
             if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
         }                                                                   // TODO: Odstranit
     } else {                                                                //
-        // TODO: Analyza vyrazov                                            //
+        // TODO: Analyza vyrazov                                            // TODO: Odstranit
         while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
             if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
         }                                                                   // TODO: Odstranit

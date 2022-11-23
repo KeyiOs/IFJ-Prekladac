@@ -75,16 +75,10 @@ typedef enum{
     T_KEYWORD_INT,
 } Token_Keyword;
 
-typedef union {
-    int Integer;
-    char *String;
-    float Float;
-} Token_Value;
-
 struct Token {
     Token_Type Type;
     Token_Keyword Keyword;
-    Token_Value Value;
+    char *String;
 };
 
 struct Stack {
@@ -99,7 +93,7 @@ struct Param {
 };
 
 _TOKEN_ *T_Create();
-_TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, Token_Value Value, Token_Keyword Keyword);
+_TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword Keyword);
 
 int Term(Token_Type Type);
 

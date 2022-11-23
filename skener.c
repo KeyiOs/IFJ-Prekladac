@@ -13,12 +13,12 @@
 extern int Line;
 extern int Token_Number;
 
-int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* Source){    
-    char *String = (char*) malloc(10*sizeof(char));
-    if(String == NULL) return 99;
+int Strings(int *Character, char *String, _TOKEN_ *Token, int Type, FILE* Source){    
+    char *StringNew = (char*) malloc(10*sizeof(char));
+    if(StringNew == NULL) return 99;
 
     int Length = 0;
-    for(int i=0; i<10; i++) String[Length+i] = '\0';
+    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
 
     switch(Type){
         case 1: // String
@@ -26,24 +26,24 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
             while(*Character != '"'){
                 if(*Character == '$') return 1; // $ Moze byt v stringu iba cez escape sekvenciu
                 if(Length%10 == 9) {
-                    String = (char*) realloc(String, Length+10);
-                    if(String == NULL) return 99;
-                    for(int i=0; i<10; i++) String[Length+i] = '\0';
+                    StringNew = (char*) realloc(StringNew, Length+10);
+                    if(StringNew == NULL) return 99;
+                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                 }
                 if(*Character == '\\'){
                     *Character = getc(Source);
                     if(*Character == '"' || *Character == '\\'){
-                        String[Length] = *Character;
+                        StringNew[Length] = *Character;
                         Length++;
                         *Character = getc(Source);
                         continue;
                     } else if(*Character == 'n'){
-                        String[Length] = 10;
+                        StringNew[Length] = 10;
                         Length++;
                         *Character = getc(Source);
                         continue;
                     } else if(*Character == 't'){
-                        String[Length] = 9;
+                        StringNew[Length] = 9;
                         Length++;
                         *Character = getc(Source);
                         continue;
@@ -55,14 +55,14 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
                         for(int a = 0; a < 2; a++){
                             if(48 > *Character || (*Character > 57 && 65 > *Character) || (*Character > 70 && 97 > *Character) || *Character > 102){    // (!= 0-9 && != a-f && != A-F)
                                 Flag = 1;
-                                String[Length] = 92;
-                                String[Length+1] = 120;
+                                StringNew[Length] = 92;
+                                StringNew[Length+1] = 120;
                                 Length += 2;
                                 for(int b = 0; b < a; b++){
-                                    String[Length] = ES[b];
+                                    StringNew[Length] = ES[b];
                                     Length++;
                                 }
-                                String[Length] = *Character;
+                                StringNew[Length] = *Character;
                                 *Character = getc(Source);
                                 Length++;
                                 break;
@@ -82,7 +82,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
                         int Converted = ES[0] * 16 + ES[1];
                         if(32 > Converted || Converted > 126) return 1;
 
-                        String[Length] = Converted;
+                        StringNew[Length] = Converted;
                         Length++;
                         continue;
                     } else if('0' <= *Character && *Character <= '2'){  // Desiatkova escape sekvencia
@@ -92,13 +92,13 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
                         for(int a = 0; a < 3; a++){
                             if(48 > *Character || *Character > 57){
                                 Flag = 1;
-                                String[Length] = 92;
+                                StringNew[Length] = 92;
                                 Length++;
                                 for(int b = 0; b < a; b++){
-                                    String[Length] = ES[b];
+                                    StringNew[Length] = ES[b];
                                     Length++;
                                 }
-                                String[Length] = *Character;
+                                StringNew[Length] = *Character;
                                 *Character = getc(Source);
                                 Length++;
                                 break;
@@ -112,17 +112,17 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
                         int Converted = (ES[0] - 48) * 100 + (ES[1] - 48) * 10 + (ES[2] - 48);
                         if(32 > Converted || Converted > 126) return 1;
 
-                        String[Length] = Converted;
+                        StringNew[Length] = Converted;
                         Length++;
                         continue;
                     } else{
-                        String[Length] = '\\';
-                        String[Length+1] = *Character;
+                        StringNew[Length] = '\\';
+                        StringNew[Length+1] = *Character;
                         Length += 2;
                         *Character = getc(Source);
                     }
                 }
-                String[Length] = *Character;
+                StringNew[Length] = *Character;
                 Length++;
                 *Character = getc(Source);
             }
@@ -131,7 +131,7 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
         case 3: // Datovy typ
             while('a' <= *Character && *Character <= 'z'){
                 if(Length == 6) return 1;
-                String[Length] = *Character;
+                StringNew[Length] = *Character;
                 Length++;
                 *Character = getc(Source);
             }
@@ -142,11 +142,11 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
             if((65 > *Character || *Character > 90) && (97 > *Character || *Character > 122) && *Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Chybny prvy symbol
             while((47 < *Character && *Character < 58) || (64 < *Character && *Character < 91) || (96 < *Character && *Character < 123) || *Character == '_'){
                 if(Length%10 == 9) {
-                    String = (char*) realloc(String, Length+10);
-                    if(String == NULL) return 99;
-                    for(int i=0; i<10; i++) String[Length+i] = '\0';
+                    StringNew = (char*) realloc(StringNew, Length+10);
+                    if(StringNew == NULL) return 99;
+                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                 }
-                String[Length] = *Character;
+                StringNew[Length] = *Character;
                 Length++;
                 *Character = getc(Source);
             }
@@ -159,29 +159,29 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
     switch(Type){
         case 3: // Datovy typ
         case 4: // Funkcie && Klucove slova
-            if(!strcmp(String, "function")) KeyWord = 1;
-            else if(!strcmp(String, "return")) KeyWord = 2;
-            else if(!strcmp(String, "while")) KeyWord = 3;
-            else if(!strcmp(String, "else")) KeyWord = 4;
-            else if(!strcmp(String, "if")) KeyWord = 5;
+            if(!strcmp(StringNew, "function")) KeyWord = 1;
+            else if(!strcmp(StringNew, "return")) KeyWord = 2;
+            else if(!strcmp(StringNew, "while")) KeyWord = 3;
+            else if(!strcmp(StringNew, "else")) KeyWord = 4;
+            else if(!strcmp(StringNew, "if")) KeyWord = 5;
 
-            else if(!strcmp(String, "substring")) KeyWord = 6;
-            else if(!strcmp(String, "floatval")) KeyWord = 7;
-            else if(!strcmp(String, "intval")) KeyWord = 8;
-            else if(!strcmp(String, "strval")) KeyWord = 9;
-            else if(!strcmp(String, "strlen")) KeyWord = 10;
-            else if(!strcmp(String, "write")) KeyWord = 11;
-            else if(!strcmp(String, "reads")) KeyWord = 12;
-            else if(!strcmp(String, "readi")) KeyWord = 13;
-            else if(!strcmp(String, "readf")) KeyWord = 14;
-            else if(!strcmp(String, "ord")) KeyWord = 15;
-            else if(!strcmp(String, "chr")) KeyWord = 16;
+            else if(!strcmp(StringNew, "substring")) KeyWord = 6;
+            else if(!strcmp(StringNew, "floatval")) KeyWord = 7;
+            else if(!strcmp(StringNew, "intval")) KeyWord = 8;
+            else if(!strcmp(StringNew, "strval")) KeyWord = 9;
+            else if(!strcmp(StringNew, "strlen")) KeyWord = 10;
+            else if(!strcmp(StringNew, "write")) KeyWord = 11;
+            else if(!strcmp(StringNew, "reads")) KeyWord = 12;
+            else if(!strcmp(StringNew, "readi")) KeyWord = 13;
+            else if(!strcmp(StringNew, "readf")) KeyWord = 14;
+            else if(!strcmp(StringNew, "ord")) KeyWord = 15;
+            else if(!strcmp(StringNew, "chr")) KeyWord = 16;
 
-            else if(!strcmp(String, "string")) KeyWord = 17;
-            else if(!strcmp(String, "float")) KeyWord = 18;
-            else if(!strcmp(String, "void")) KeyWord = 19;
-            else if(!strcmp(String, "null")) KeyWord = 20;
-            else if(!strcmp(String, "int")) KeyWord = 21;
+            else if(!strcmp(StringNew, "string")) KeyWord = 17;
+            else if(!strcmp(StringNew, "float")) KeyWord = 18;
+            else if(!strcmp(StringNew, "void")) KeyWord = 19;
+            else if(!strcmp(StringNew, "null")) KeyWord = 20;
+            else if(!strcmp(StringNew, "int")) KeyWord = 21;
 
             break;
         default:
@@ -189,21 +189,21 @@ int Strings(int *Character, Token_Value Value, _TOKEN_ *Token, int Type, FILE* S
     }
 
     if(Type != 3){
-        Value.String = NULL;
-        Value.String = (char*) malloc(Length*sizeof(char));
-        if(Value.String == NULL) return 99;
-        for(int i=0; i<Length; i++) Value.String[i] = '\0';
+        String = NULL;
+        String = (char*) malloc(Length*sizeof(char));
+        if(String == NULL) return 99;
+        for(int i=0; i<Length; i++) String[i] = '\0';
 
-        strcpy(Value.String,String);
-        free(Value.String);
+        strcpy(String,StringNew);
+        free(String);
     }
-    if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, Value, 0);
-    else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, Value, 0);
+    if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, String, 0);
+    else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, String, 0);
     else if(Type == 3 || Type == 4){
-        if(KeyWord == 0) Token = T_Assign(Token, T_TYPE_FUNCTION, Value, 0);
-        else Token = T_Assign(Token, T_TYPE_KEYWORD, Value, KeyWord);
+        if(KeyWord == 0) Token = T_Assign(Token, T_TYPE_FUNCTION, String, 0);
+        else Token = T_Assign(Token, T_TYPE_KEYWORD, String, KeyWord);
     }
-    free(String);
+    free(StringNew);
 
     return 0;
 }
@@ -278,7 +278,7 @@ int Comment(int *Character, FILE* Source){
 }
 
 int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
-    Token_Value Value;
+    char *String = "\0";
     int ERR = 0;
 
     switch(*Character){
@@ -299,80 +299,80 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             if(*Character != '=') return 1;
             *Character = getc(Source);
             if(*Character != '=') return 1;
-            Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS_NEG, Value, 0);
+            Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS_NEG, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '"':   // String
-            ERR = Strings(Character, Value, Token, 1, Source);
+            ERR = Strings(Character, String, Token, 1, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case '$':   // Premenna
-            ERR = Strings(Character, Value, Token, 2, Source);
+            ERR = Strings(Character, String, Token, 2, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case '(':
-            Token = T_Assign(Token, T_TYPE_OPEN_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_OPEN_BRACKET, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ')':
-            Token = T_Assign(Token, T_TYPE_CLOSED_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CLOSED_BRACKET, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '*':
-            Token = T_Assign(Token, T_TYPE_MULTIPLICATION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_MULTIPLICATION, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '+':
-            Token = T_Assign(Token, T_TYPE_PLUS, Value, 0);
+            Token = T_Assign(Token, T_TYPE_PLUS, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ',':
-            Token = T_Assign(Token, T_TYPE_COMMA, Value, 0);
+            Token = T_Assign(Token, T_TYPE_COMMA, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '-':
-            Token = T_Assign(Token, T_TYPE_MINUS, Value, 0);
+            Token = T_Assign(Token, T_TYPE_MINUS, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '.':
-            Token = T_Assign(Token, T_TYPE_CONCATENATION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CONCATENATION, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '/':
             *Character = getc(Source);
             if(Comment(Character, Source) == 1) return Scan(Token, Source, Character);
-            Token = T_Assign(Token, T_TYPE_DIVISION, Value, 0);
+            Token = T_Assign(Token, T_TYPE_DIVISION, String, 0);
             return 0;
             break;
         case ':':
-            Token = T_Assign(Token, T_TYPE_COLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_COLON, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case ';':
-            Token = T_Assign(Token, T_TYPE_SEMICOLON, Value, 0);
+            Token = T_Assign(Token, T_TYPE_SEMICOLON, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '<':
             *Character = getc(Source);
             if(*Character == '='){
-                Token = T_Assign(Token, T_TYPE_SMALLER_EQUAL, Value, 0);
+                Token = T_Assign(Token, T_TYPE_SMALLER_EQUAL, String, 0);
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            Token = T_Assign(Token, T_TYPE_SMALLER, Value, 0);
+            Token = T_Assign(Token, T_TYPE_SMALLER, String, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -381,23 +381,23 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             if(*Character == '='){
                 *Character = getc(Source);
                 if(*Character != '=') return 1;
-                Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS, Value, 0);;
+                Token = T_Assign(Token, T_TYPE_TRIPLE_EQUALS, String, 0);;
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            Token = T_Assign(Token, T_TYPE_EQUAL, Value, 0);
+            Token = T_Assign(Token, T_TYPE_EQUAL, String, 0);
             return 0;
             break;
         case '>':
             *Character = getc(Source);
             if(*Character == '='){
-                Token = T_Assign(Token, T_TYPE_GREATER_EQUAL, Value, 0);
+                Token = T_Assign(Token, T_TYPE_GREATER_EQUAL, String, 0);
                 *Character = getc(Source);
                 return 0;
                 break;
             }
-            Token = T_Assign(Token, T_TYPE_GREATER, Value, 0);
+            Token = T_Assign(Token, T_TYPE_GREATER, String, 0);
             *Character = getc(Source);
             return 0;
             break;
@@ -406,58 +406,49 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             if(*Character == '>') {
                 *Character = getc(Source);
                 if(*Character == EOF) {
-                    Token = T_Assign(Token, T_TYPE_EOF, Value, 0);
+                    Token = T_Assign(Token, T_TYPE_EOF, String, 0);
                     return 0;
                 }
                 return 1;
             }
-            ERR = Strings(Character, Value, Token, 3, Source);
+            ERR = Strings(Character, String, Token, 3, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case '{':
-            Token = T_Assign(Token, T_TYPE_OPEN_CURLY_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_OPEN_CURLY_BRACKET, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '}':
-            Token = T_Assign(Token, T_TYPE_CLOSED_CURLY_BRACKET, Value, 0);
+            Token = T_Assign(Token, T_TYPE_CLOSED_CURLY_BRACKET, String, 0);
             *Character = getc(Source);
             return 0;
             break;
         case '0' ... '9':   // Integer alebo float
             int Float = 0;
-            float Number = 0.0;
-            int Length = 0;
-            while(*Character != ' ' && *Character != ')' && *Character != ';' && *Character != 10 && *Character != 13 && *Character != EOF){
-                if((48 > *Character || *Character > 57) && *Character != '.') return 1;
-                if(Float == 1) Length ++;
+            while((48 <= *Character && *Character <= 57) || *Character == '.'){
                 if(*Character == '.'){
                     if(Float == 0) Float = 1;
                     else return 1;
                 }
-                else Number = Number * 10 + *Character - 48;
                 *Character = getc(Source);
             }
             if(Float == 0){
-                Value.Integer = Number;
-                Token = T_Assign(Token, T_TYPE_INT_DATATYPE, Value, 0);
+                Token = T_Assign(Token, T_TYPE_INT_DATATYPE, String, 0);
                 return 0;
-                break;
             }
-            for(int a = 0; a < Length; a ++) Number = Number / 10;
-            Value.Float = Number;
-            Token = T_Assign(Token, T_TYPE_FLOAT_DATATYPE, Value, 0);
+            Token = T_Assign(Token, T_TYPE_FLOAT_DATATYPE, String, 0);
             return 0;
             break;
         case 'a' ... 'z':
         case 'A' ... 'Z':
-            ERR = Strings(Character, Value, Token, 4, Source);
+            ERR = Strings(Character, String, Token, 4, Source);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case EOF:   // Koniec vstupu
-            Token = T_Assign(Token, T_TYPE_EOF, Value, 0);
+            Token = T_Assign(Token, T_TYPE_EOF, String, 0);
             return 0;
             break;
         default:
