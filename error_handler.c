@@ -8,22 +8,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void ERR_Handler(int ERR, int Line, int Token_Number) {
+void ERR_Handler(int ERR, int Line) {
     switch(ERR) {
         case 1:
             fprintf(stderr, "Lexical error: Unexpected character or series of characters. [Line %i]\n", Line);
             break;
         case 2:
-            fprintf(stderr, "Syntactical error. [Token %i]\n", Token_Number);
+            fprintf(stderr, "Syntactical error.\n");
             break;
         case 3:
-            fprintf(stderr, "Semantic Error: Undefined function/variable or redefinition of function/variable.\n");
+            fprintf(stderr, "Semantic Error: Undefined function or redefinition of function.\n");
             break;
         case 4:
             fprintf(stderr, "Semantic Error: Wrong amount/datatype of parameters passed to function or wrong datatype or return variable.\n");
             break;
         case 5:
-            fprintf(stderr, "Semantic Error: Undefined function/variable\n");
+            fprintf(stderr, "Semantic Error: Undefined variable\n");
             break;
         case 6:
             fprintf(stderr, "Semantic Error: Missing/Leftover expression in function return statement\n");

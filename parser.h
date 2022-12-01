@@ -9,6 +9,8 @@
 #define _TOKEN_ struct Token
 #define _STACK_ struct Stack
 #define _PARAM_ struct Param
+#define _ITEMF_ struct ItemF
+#define _ITEMV_ struct ItemV
 
 #ifndef PARSER_CHECK
 #define PARSER_CHECK
@@ -70,9 +72,11 @@ typedef enum{
 
     T_KEYWORD_STRING,  // Declarations
     T_KEYWORD_FLOAT,
-    T_KEYWORD_VOID,
     T_KEYWORD_NULL,
     T_KEYWORD_INT,
+    T_KEYWORD_VOID,
+
+    T_KEYWORD_EMPTY,
 } Token_Keyword;
 
 struct Token {
@@ -87,9 +91,28 @@ struct Stack {
 };
 
 struct Param {
-    Token_Type Type;
+    Token_Keyword Type;
     char *Name;
-    struct Param *Next;
+    _PARAM_ *Next;
+};
+
+struct ItemV {
+    char *Name;
+    Token_Type Type;
+    int Dive;
+    int Init;
+    _ITEMV_ *Left;
+    _ITEMV_ *Right;
+};
+
+struct ItemF {
+    char *Name;
+    Token_Keyword Type;
+    _PARAM_ *Params;
+    _ITEMV_ *Local;
+    _ITEMF_ *Root;
+    _ITEMF_ *Left;
+    _ITEMF_ *Right;
 };
 
 _TOKEN_ *T_Create();
@@ -97,10 +120,10 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword K
 
 int Term(Token_Type Type);
 
-int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, int Dive);
-int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character);
-int Function(_TOKEN_ *Token, FILE* Source, int *Character, int Dive);
-int Variable(_TOKEN_ *Token, FILE* Source, int *Character);
-int Start(_TOKEN_ *Token, FILE* Source, int *Character, int Dive);
+int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
+int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table);
+int Function(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
+int Variable(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table);
+int Start(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
 
-#endif  
+#endif

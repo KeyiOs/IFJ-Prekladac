@@ -9,6 +9,6 @@
 #ifndef ERR_HANDLER_CHECK
 #define ERR_HANDLER_CHECK
 
-void ERR_Handler(int ERR, int Line, int Token_Number);
+void ERR_Handler(int ERR, int Line);
 
 #endif

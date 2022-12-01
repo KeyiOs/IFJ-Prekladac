@@ -1,4 +1,4 @@
-OBJ = error_handler.c analyzator.c stack.c generator.c parser.c stackA.c skener.c symtable.c
+OBJ = error_handler.c analyzator.c stack.c generator.c parser.c skener.c symtable.c
 CFLAGS=-I.
 CC=gcc
 

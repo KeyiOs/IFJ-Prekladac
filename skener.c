@@ -179,10 +179,13 @@ int Strings(int *Character, char *String, _TOKEN_ *Token, int Type, FILE* Source
 
             else if(!strcmp(StringNew, "string")) KeyWord = 17;
             else if(!strcmp(StringNew, "float")) KeyWord = 18;
-            else if(!strcmp(StringNew, "void")) KeyWord = 19;
-            else if(!strcmp(StringNew, "null")) KeyWord = 20;
-            else if(!strcmp(StringNew, "int")) KeyWord = 21;
+            else if(!strcmp(StringNew, "int")) KeyWord = 20;
+            else if(!strcmp(StringNew, "void")) KeyWord = 21;
 
+            else if(!strcmp(StringNew, "null")) {
+                Token = T_Assign(Token, T_TYPE_NULL_DATATYPE, String, 0);
+                return 0;
+            }
             break;
         default:
             break;
@@ -195,7 +198,6 @@ int Strings(int *Character, char *String, _TOKEN_ *Token, int Type, FILE* Source
         for(int i=0; i<Length; i++) String[i] = '\0';
 
         strcpy(String,StringNew);
-        free(String);
     }
     if(Type == 1) Token = T_Assign(Token, T_TYPE_STRING_DATATYPE, String, 0);
     else if(Type == 2) Token = T_Assign(Token, T_TYPE_VARIABLE, String, 0);
@@ -209,7 +211,7 @@ int Strings(int *Character, char *String, _TOKEN_ *Token, int Type, FILE* Source
 }
 
 int Prolog(FILE* Source, int *Character){
-    *Character = getc(Source);
+    if((*Character = getc(Source)) == -1) return 1;
 
     char *String = (char*) malloc(25*sizeof(char));
     if(String == NULL) return 99;
@@ -218,7 +220,7 @@ int Prolog(FILE* Source, int *Character){
     for(int i=0; i<25; i++) String[Length+i] = '\0';
     while(*Character != ' ' && *Character != 9 && *Character != 10 && *Character != 13) {
         String[Length] = *Character;
-        *Character = getc(Source);
+        if((*Character = getc(Source)) == -1) return 1;
         Length++;
     }
     if(strcmp(String,"<?php")) {
@@ -226,23 +228,25 @@ int Prolog(FILE* Source, int *Character){
         return 2;
     }
     
-    while(*Character == ' ' || *Character == 9) *Character = getc(Source);
+    while(*Character == ' ' || *Character == 9) if((*Character = getc(Source)) == -1) return 1;
     if(*Character == 10 || *Character == 13) {
-        *Character = getc(Source);
+        if((*Character = getc(Source)) == -1) return 1;
+        if(*Character == 13 && (*Character = getc(Source)) == -1) return 1;
         Line++;
     } else if(*Character == '/') {
-        if(Comment(Character, Source) == 0) return 2;
-        else {
-            *Character = getc(Source);
+        int cmnt;
+        if((cmnt = Comment(Character, Source)) == 0) return 2;
+        else if(cmnt == 100) {
+            if((*Character = getc(Source)) == -1) return 1;
             Line++;
-        }
+        } else return cmnt;
     }
 
     Length = 0;
     for(int i=0; i<25; i++) String[Length+i] = '\0';
     while(*Character != ' ' && *Character != 9 && *Character != 10 && *Character != 13 && *Character != EOF && Length != 25) {
         String[Length] = *Character;
-        *Character = getc(Source);
+        if((*Character = getc(Source)) == -1) return 1;
         Length++;
     }
     if(Length == 25) return 1;
@@ -251,27 +255,27 @@ int Prolog(FILE* Source, int *Character){
         return 1;
     }
 
-    *Character = getc(Source);
+    if((*Character = getc(Source)) == -1) return 1;
     return 0;
 }
 
 int Comment(int *Character, FILE* Source){
     if(*Character == '/'){   // Riadkovy komentar
-        while(*Character != EOF && *Character != 10 && *Character != 13) *Character = getc(Source);
-        return 1;
+        while(*Character != EOF && *Character != 10 && *Character != 13) if((*Character = getc(Source)) == -1) return 1;
+        if(*Character == 13 && (*Character = getc(Source)) == -1) return 1;
+        return 100;
     }
     else if(*Character == '*') { // Viacriadkovy komentar
         while(*Character != EOF) {
-            *Character = getc(Source);
+            if((*Character = getc(Source)) == -1) return 1;
             if(*Character == '*'){
-                *Character = getc(Source);
+                if((*Character = getc(Source)) == -1) return 1;
                 if(*Character == '/'){
                     *Character = getc(Source);
-                    return 1;
+                    return 100;
                 }
             } else if(*Character == 10 || *Character == 13) Line++;
         }
-        return 1;
     }
 
     return 0;
@@ -285,7 +289,10 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
         case 9:     // Tabulator
         case 11:    //
         case ' ':   //
-            while(*Character == 9 || *Character == 11 || *Character == ' ') *Character = getc(Source);
+            while(*Character == 9 || *Character == 11 || *Character == ' ') if((*Character = getc(Source)) == -1) {
+                Token = T_Assign(Token, T_TYPE_EOF, String, 0);
+                return 0;
+            }
             return Scan(Token, Source, Character);
         case 10:    // Novy riadok
         case 13:    //
@@ -350,8 +357,10 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             break;
         case '/':
             *Character = getc(Source);
-            if(Comment(Character, Source) == 1) return Scan(Token, Source, Character);
-            Token = T_Assign(Token, T_TYPE_DIVISION, String, 0);
+            int cmnt;
+            if((cmnt = Comment(Character, Source)) == 100) return Scan(Token, Source, Character);
+            else if(cmnt == 0) Token = T_Assign(Token, T_TYPE_DIVISION, String, 0);
+            else return cmnt;
             return 0;
             break;
         case ':':
@@ -425,7 +434,7 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             *Character = getc(Source);
             return 0;
             break;
-        case '0' ... '9':   // Integer alebo float
+        case '0' ... '9': {   // Integer alebo float
             int Float = 0;
             while((48 <= *Character && *Character <= 57) || *Character == '.'){
                 if(*Character == '.'){
@@ -441,6 +450,7 @@ int Scan(_TOKEN_ *Token, FILE* Source, int *Character){
             Token = T_Assign(Token, T_TYPE_FLOAT_DATATYPE, String, 0);
             return 0;
             break;
+        }
         case 'a' ... 'z':
         case 'A' ... 'Z':
             ERR = Strings(Character, String, Token, 4, Source);
