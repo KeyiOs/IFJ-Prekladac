@@ -31,7 +31,84 @@ void my_pop() {
     top = top - 1;
 }
 
+// _________________________________________Instruction List Funkcie____________________________________________________
+
+void InitListString(StringList *List) {
+    List->First = NULL;
+    List->Actual = NULL;
+    List->Last = NULL;
+}
+
+void DisposeListString(StringList *List) {
+    if (List->First != NULL) {
+        while (List->First->ptr != NULL) {
+            StringElementPtr elemPtr;
+            elemPtr = List->First->ptr;
+            List->First->ptr = elemPtr->ptr;
+            free(elemPtr->data);
+            free(elemPtr);
+        }
+        free(List->First->data);
+        free(List->First);
+
+        List->First = NULL;
+        List->Actual = NULL;
+        List->Last = NULL;
+    }
+}
+
+void InsertFirstString(StringList *List, char *val) {
+    StringElementPtr newElemPtr = malloc(sizeof(struct StringElement));
+
+    if (newElemPtr == NULL) {
+        return;
+    } else {
+        newElemPtr->data = val;
+        newElemPtr->ptr = List->First;
+        List->First = newElemPtr;
+        if (List->Last == NULL) {
+            List->Last = List->First;
+        }
+    }
+}
+
+void InsertLastString(StringList *List, char *val) {
+    StringElementPtr newElemPtr = malloc(sizeof(struct StringElement));
+
+    if (newElemPtr == NULL) {
+        return;
+    } else {
+        newElemPtr->data = val;
+        newElemPtr->ptr = NULL;
+        if (List->Last != NULL)
+            List->Last->ptr = newElemPtr;
+        List->Last = newElemPtr;
+        if (List->First == NULL) {
+            List->First = List->Last;
+        }
+    }
+
+}
+
+void DeleteFirstString(StringList *List) {
+    StringElementPtr elemPtr;
+
+    if (List->First != NULL) {
+        if (List->Actual == List->First)
+            List->Actual = NULL;
+
+        elemPtr = List->First->ptr;
+        free(List->First->data);
+        free(List->First);
+        List->First = elemPtr;
+
+        if (List->First == NULL)
+            List->Last = NULL;
+    }
+}
+
 // _________________________________________Funckie na Generovanie______________________________________________________
+
 
 void G_BigStart() {
 
@@ -58,42 +135,39 @@ void G_BigEnd() {
     printf("EXIT int@0\n");
 }
 
-/*
-void G_defvar(char* id,int scope, bool in_for){
-    if(in_for){
-        printf("MOVE LF@%s$%d nil@nil\n",id, scope);
-    }else
-    {
-        printf("DEFVAR LF@%s$%d\n",id, scope);
+
+void G_defvar(char *id, int scope, bool in_for) {
+    if (in_for) {
+        printf("MOVE LF@%s$%d nil@nil\n", id, scope);
+    } else {
+        printf("DEFVAR LF@%s$%d\n", id, scope);
     }
 
 }
 
-void gen_retvals(int number_of_return_values){
-    for(int i = 1; i <= number_of_return_values; i++)
+void gen_retvals(int number_of_return_values) {
+    for (int i = 1; i <= number_of_return_values; i++)
         printf("DEFVAR LF@retval$%d\n", i);
 }
 
-void gen_params(string* params){
-    if(params->len <= 0)
+void gen_params(string *params) {
+    if (params->len <= 0)
         return;
     printf("DEFVAR LF@");
-    for(int i = 0; i < params->len-1; i++){
-        if(params->str[i] != '#'){
+    for (int i = 0; i < params->len - 1; i++) {
+        if (params->str[i] != '#') {
             printf("%c", params->str[i]);
-        }else
-        {
+        } else {
             printf("$0\nDEFVAR LF@");
         }
     }
     printf("$0\n");
     char tmpchar[params->len];
     int j = 0;
-    for(int i = 0 ; i < params->len; i++){
-        if(params->str[i] != '#'){
+    for (int i = 0; i < params->len; i++) {
+        if (params->str[i] != '#') {
             tmpchar[j++] = params->str[i];
-        }else
-        {
+        } else {
             tmpchar[j] = '\0';
             printf("POPS LF@%s$0\n", tmpchar);
             j = 0;
@@ -102,19 +176,19 @@ void gen_params(string* params){
 }
 
 void gen_call_params(token_t *last, st_stack_t *local_st) {
-    token_t* prev = last;
+    token_t *prev = last;
     if (prev == NULL)
         return;
-    while(prev->type != TOKEN_LBRACKET){
+    while (prev->type != TOKEN_LBRACKET) {
         gen_pushs_param(prev->type, &prev->actual_value, local_st);
         prev = prev->prev;
     }
 
 }
-void gen_pushs_param(token_type type, string *value, st_stack_t *local_st){
-    st_item* item;
-    switch (type)
-    {
+
+void gen_pushs_param(token_type type, string *value, st_stack_t *local_st) {
+    st_item *item;
+    switch (type) {
         case TOKEN_INTEGER:
             printf("PUSHS int@%s\n", value->str);
             break;
@@ -138,42 +212,42 @@ void gen_pushs_param(token_type type, string *value, st_stack_t *local_st){
 }
 
 void gen_add_to_vars(char *var_name, int scope) {
-    char* tmp = malloc(strlen(var_name)+BLOCK_SIZE);
-    if(tmp == NULL)
+    char *tmp = malloc(strlen(var_name) + BLOCK_SIZE);
+    if (tmp == NULL)
         exit(99);
-    if(scope < 0)
-        sprintf(tmp,"%s",var_name);
+    if (scope < 0)
+        sprintf(tmp, "%s", var_name);
     else
-        sprintf(tmp,"%s$%i",var_name,scope);
+        sprintf(tmp, "%s$%i", var_name, scope);
     InsertFirstString(&Vars, tmp);
 }
 
 void gen_add_to_exp(char *exp, bool in_for) {
-    char* tmp = malloc(strlen(exp)+1);
-    strcpy(tmp,exp);
-    if(in_for)
+    char *tmp = malloc(strlen(exp) + 1);
+    strcpy(tmp, exp);
+    if (in_for)
         InsertFirstString(&Exps, tmp);
     else
         InsertLastString(&Exps, tmp);
 }
 
-void gen_for_assign(int NumberOfVariables){
-    if(NumberOfVariables <= 0)
+void gen_for_assign(int NumberOfVariables) {
+    if (NumberOfVariables <= 0)
         return;
     printf("CREATEFRAME\n");
-    for(int j = 0; j < NumberOfVariables; j++){
+    for (int j = 0; j < NumberOfVariables; j++) {
         printf("%s", Exps.First->data);
         DeleteFirstString(&Exps);
-        printf("DEFVAR TF@$tmp$%d\n",ID);
+        printf("DEFVAR TF@$tmp$%d\n", ID);
         printf("POPS TF@$tmp$%d\n", ID);
         my_push();
     }
-    for(int i = 0; i < NumberOfVariables; i++){
-        if(strcmp(Vars.First->data, "_") == 0){
+    for (int i = 0; i < NumberOfVariables; i++) {
+        if (strcmp(Vars.First->data, "_") == 0) {
             DeleteFirstString(&Vars);
             continue;
         }
-        printf("MOVE LF@%s TF@$tmp$%d\n",Vars.First->data, IntStack[top]);
+        printf("MOVE LF@%s TF@$tmp$%d\n", Vars.First->data, IntStack[top]);
         DeleteFirstString(&Vars);
         my_pop();
     }
@@ -181,57 +255,57 @@ void gen_for_assign(int NumberOfVariables){
 
 void gen_assign(int NumberOfVariables, bool in_for) {
     int tmp_top;
-    if(NumberOfVariables <= 0)
+    if (NumberOfVariables <= 0)
         return;
     printf("CREATEFRAME\n");
-    for(int j = 0; j < NumberOfVariables; j++){
+    for (int j = 0; j < NumberOfVariables; j++) {
         printf("%s", Exps.First->data);
         DeleteFirstString(&Exps);
-        printf("DEFVAR TF@$tmp$%d\n",ID);
+        printf("DEFVAR TF@$tmp$%d\n", ID);
         printf("POPS TF@$tmp$%d\n", ID);
         my_push();
     }
-    tmp_top = top-NumberOfVariables+1;
-    for(int i = 0; i < NumberOfVariables; i++){
-        if(strcmp(Vars.First->data, "_") == 0){
+    tmp_top = top - NumberOfVariables + 1;
+    for (int i = 0; i < NumberOfVariables; i++) {
+        if (strcmp(Vars.First->data, "_") == 0) {
             DeleteFirstString(&Vars);
             continue;
         }
-        printf("MOVE LF@%s TF@$tmp$%d\n",Vars.First->data, IntStack[in_for?tmp_top++:top]);
+        printf("MOVE LF@%s TF@$tmp$%d\n", Vars.First->data, IntStack[in_for ? tmp_top++ : top]);
         DeleteFirstString(&Vars);
         my_pop();
     }
 
 }
 
-void gen_assign_return(int NumberOfVariables){
-    for(int i = NumberOfVariables; i > 0; i--){
-        if(strcmp(Vars.First->data, "_") == 0){
+void gen_assign_return(int NumberOfVariables) {
+    for (int i = NumberOfVariables; i > 0; i--) {
+        if (strcmp(Vars.First->data, "_") == 0) {
             DeleteFirstString(&Vars);
             continue;
         }
-        printf("MOVE LF@%s TF@retval$%i\n",Vars.First->data, i);
+        printf("MOVE LF@%s TF@retval$%i\n", Vars.First->data, i);
         DeleteFirstString(&Vars);
     }
 }
 
 void gen_set_retvals(int NumberOfReturns, bool in_for) {
 
-    if (!in_for){
-        for(int i = 1; i <= NumberOfReturns; i++){
+    if (!in_for) {
+        for (int i = 1; i <= NumberOfReturns; i++) {
             printf("%s", Exps.First->data);
             DeleteFirstString(&Exps);
-            printf("POPS LF@retval$%i\n",i);
+            printf("POPS LF@retval$%i\n", i);
         }
-    }else{
-        for(int i = NumberOfReturns; i >= 1; i--){
+    } else {
+        for (int i = NumberOfReturns; i >= 1; i--) {
             printf("%s", Exps.First->data);
             DeleteFirstString(&Exps);
-            printf("POPS LF@retval$%i\n",i);
+            printf("POPS LF@retval$%i\n", i);
         }
     }
 }
-*/
+
 
 void G_for_start(char *expression) {
     printf("LABEL CHECK$FOR$%d\n", ID);
