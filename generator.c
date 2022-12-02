@@ -136,7 +136,7 @@ void G_BigEnd() {
 }
 
 
-void G_defvar(char *id, int scope, bool in_for) {
+void G_DefVar(char *id, int scope, bool in_for) {
     if (in_for) {
         printf("MOVE LF@%s$%d nil@nil\n", id, scope);
     } else {
@@ -145,12 +145,12 @@ void G_defvar(char *id, int scope, bool in_for) {
 
 }
 
-void gen_retvals(int number_of_return_values) {
+void G_RetVal(int number_of_return_values) {
     for (int i = 1; i <= number_of_return_values; i++)
         printf("DEFVAR LF@retval$%d\n", i);
 }
 
-void gen_params(string *params) {
+void G_Param(string *params) {
     if (params->len <= 0)
         return;
     printf("DEFVAR LF@");
@@ -175,18 +175,18 @@ void gen_params(string *params) {
     }
 }
 
-void gen_call_params(token_t *last, st_stack_t *local_st) {
+void G_CallParam(token_t *last, st_stack_t *local_st) {
     token_t *prev = last;
     if (prev == NULL)
         return;
     while (prev->type != TOKEN_LBRACKET) {
-        gen_pushs_param(prev->type, &prev->actual_value, local_st);
+        G_PushParams(prev->type, &prev->actual_value, local_st);
         prev = prev->prev;
     }
 
 }
 
-void gen_pushs_param(token_type type, string *value, st_stack_t *local_st) {
+void G_PushParams(token_type type, string *value, st_stack_t *local_st) {
     st_item *item;
     switch (type) {
         case TOKEN_INTEGER:
@@ -211,7 +211,7 @@ void gen_pushs_param(token_type type, string *value, st_stack_t *local_st) {
 
 }
 
-void gen_add_to_vars(char *var_name, int scope) {
+void G_AddToVariable(char *var_name, int scope) {
     char *tmp = malloc(strlen(var_name) + BLOCK_SIZE);
     if (tmp == NULL)
         exit(99);
@@ -222,7 +222,7 @@ void gen_add_to_vars(char *var_name, int scope) {
     InsertFirstString(&Vars, tmp);
 }
 
-void gen_add_to_exp(char *exp, bool in_for) {
+void G_AddToExponent(char *exp, bool in_for) {
     char *tmp = malloc(strlen(exp) + 1);
     strcpy(tmp, exp);
     if (in_for)
@@ -231,7 +231,7 @@ void gen_add_to_exp(char *exp, bool in_for) {
         InsertLastString(&Exps, tmp);
 }
 
-void gen_for_assign(int NumberOfVariables) {
+void G_ForAss(int NumberOfVariables) {
     if (NumberOfVariables <= 0)
         return;
     printf("CREATEFRAME\n");
@@ -253,7 +253,7 @@ void gen_for_assign(int NumberOfVariables) {
     }
 }
 
-void gen_assign(int NumberOfVariables, bool in_for) {
+void G_Initialization(int NumberOfVariables, bool in_for) {
     int tmp_top;
     if (NumberOfVariables <= 0)
         return;
@@ -278,7 +278,7 @@ void gen_assign(int NumberOfVariables, bool in_for) {
 
 }
 
-void gen_assign_return(int NumberOfVariables) {
+void G_AssReturn(int NumberOfVariables) {
     for (int i = NumberOfVariables; i > 0; i--) {
         if (strcmp(Vars.First->data, "_") == 0) {
             DeleteFirstString(&Vars);
@@ -289,7 +289,7 @@ void gen_assign_return(int NumberOfVariables) {
     }
 }
 
-void gen_set_retvals(int NumberOfReturns, bool in_for) {
+void G_SetReturnVal(int NumberOfReturns, bool in_for) {
 
     if (!in_for) {
         for (int i = 1; i <= NumberOfReturns; i++) {
@@ -307,19 +307,19 @@ void gen_set_retvals(int NumberOfReturns, bool in_for) {
 }
 
 
-void G_for_start(char *expression) {
+void G_ForStart(char *expression) {
     printf("LABEL CHECK$FOR$%d\n", ID);
     printf("%s", expression);
-    G_for_jump();
+    G_ForJump();
 }
 
-void G_for_jump() {
+void G_ForJump() {
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS END$FOR$%d\n", ID);
     my_push();
 }
 
-void G_for_end() {
+void G_ForEnd() {
     StringElementPtr tmp = Vars.First;
     int count = 0;
     while (tmp != NULL) {
@@ -331,7 +331,7 @@ void G_for_end() {
     my_pop();
 }
 
-void G_call_start(char *function, int count_of_vars) {
+void G_CallStart(char *function, int count_of_vars) {
     printf("CREATEFRAME\n");
     printf("CLEARS\n");
     if (strcmp(function, "print") == 0) {
@@ -340,7 +340,7 @@ void G_call_start(char *function, int count_of_vars) {
     }
 }
 
-void G_call(char *function) {
+void G_Call(char *function) {
     printf("CALL func$%s\n", function);
 }
 
@@ -354,18 +354,18 @@ void G_LABEL_end() {
     printf("RETURN\n");
 }
 
-void G_start_of_function(char *function) {
+void G_StartFunction(char *function) {
     printf("#Start of function\n");
     G_LABEL_start(function);
 }
 
-void G_end_of_function() {
+void G_EndFunction() {
     printf("#End of function\n");
     G_LABEL_end();
 }
 
 
-void G_if_start(char *expression) {
+void G_IfStart(char *expression) {
     printf("#IF $if$%d\n", ID);
     printf("%s", expression);
     printf("PUSHS bool@true\n");
@@ -373,12 +373,12 @@ void G_if_start(char *expression) {
     my_push();
 }
 
-void G_else() {
+void G_Else() {
     printf("JUMP $if$%d$end\n", IntStack[top]);
     printf("LABEL $if$%d$else$%d\n", IntStack[top], elseCounter);
 }
 
-void G_if_end() {
+void G_IfEnd() {
     printf("LABEL $if$%d$end\n", IntStack[top]);
     my_pop();
     elseCounter = 0;
