@@ -3,6 +3,10 @@
  * @author <xhorac20> Andrej Horacek
  */
 
+#include "parser.h"
+#include "str.h"
+#include "stack.h"
+
 #include <stdbool.h>
 #include <string.h>
 
@@ -79,13 +83,13 @@ void G_Param(string *params);
 /// Generovanie parametrov a ich inicializacia
 /// @param last - pointer na strukturu token
 /// @param local_st -  pointer na strukturu zasobnik
-void G_CallParam(token_t *last, st_stack_t *local_st);
+void G_CallParam(_STACK_ *local_st);
 
 /// Generovanie instrukcie na vlozenie hodnoty do zasobniku
 /// @param type typ tokrnu
 /// @param value pointer na string
 /// @param local_st pointer na strukturu zasobnik
-void G_PushParam(token_type type, string *value, st_stack_t *local_st);
+void G_PushParam(Token_Type type, char *value, _STACK_ *local_st);
 
 /// Generuje meno premennej ktore vlozi na 1. miesto v Stringliste Vars
 /// @param var_name - meno premennej

@@ -111,6 +111,9 @@ void DeleteFirstString(StringList *List) {
 
 
 void G_BigStart() {
+    InitListString(&ListOfStrings);     // List stringob
+    InitListString(&Vars);              // List premennych
+    InitListString(&Exps);              // List exponentov
 
     printf(".IFJcode22\n");
     printf("CREATEFRAME\n");
@@ -136,7 +139,7 @@ void G_BigEnd() {
 }
 
 
-void G_DefVar(char *id, int scope, bool in_for) {
+void G_DefVar(char *id, int scope, bool in_for) {       //
     if (in_for) {
         printf("MOVE LF@%s$%d nil@nil\n", id, scope);
     } else {
@@ -175,34 +178,32 @@ void G_Param(string *params) {
     }
 }
 
-void G_CallParam(token_t *last, st_stack_t *local_st) {
-    token_t *prev = last;
-    if (prev == NULL)
+void G_CallParam(_STACK_ *local_st) {
+    if (local_st == NULL)
         return;
-    while (prev->type != TOKEN_LBRACKET) {
-        G_PushParams(prev->type, &prev->actual_value, local_st);
-        prev = prev->prev;
+    while (local_st->Token.Type != T_TYPE_OPEN_BRACKET) {
+        G_PushParams(local_st->Token.Type, &local_st->Token.String, local_st);
+        Stack_Pop();
     }
-
 }
 
-void G_PushParams(token_type type, string *value, st_stack_t *local_st) {
+void G_PushParams(Token_Type type, char *value, _STACK_ *local_st) {
     st_item *item;
     switch (type) {
-        case TOKEN_INTEGER:
-            printf("PUSHS int@%s\n", value->str);
+        case T_TYPE_INT_DATATYPE:
+            printf("PUSHS int@%s\n", value);
             break;
 
-        case TOKEN_FLOAT:
+        case T_TYPE_FLOAT_DATATYPE:
             printf("PUSHS float@%a\n", Str_to_Float(value));
             break;
-        case TOKEN_ID:
+        case T_TYPE_VARIABLE:
             item = stack_lookup(local_st, value);
-            printf("PUSHS LF@%s$%d\n", value->str, item->data.scope);
+            printf("PUSHS LF@%s$%d\n", value, item->data.scope);
             break;
 
-        case TOKEN_STR:
-            printf("PUSHS string@%s\n", value->str);
+        case T_TYPE_STRING_DATATYPE:
+            printf("PUSHS string@%s\n", value);
             break;
 
         default:
