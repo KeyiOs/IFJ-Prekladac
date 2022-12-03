@@ -1,5 +1,5 @@
 /**
- * IFJ Projekt 2021
+ * IFJ Projekt 2022
  * @author <xkento00> Samuel Kentos
  */
 #include "stack.h"
@@ -12,6 +12,7 @@
 void Stack_Init(_STACK_ *Stack) {
     Stack->Previous = NULL;
     Stack->Token.Type = T_TYPE_NULL;
+    Stack->Token.String = NULL;
 }
 
 _STACK_ *Stack_Create() {

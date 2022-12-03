@@ -98,24 +98,18 @@ _ITEMV_ *SearchV(_ITEMV_ **ItemPtr, char *Name) {
     } else return NULL;
 }
 
-_ITEMV_ *ReplaceItem(_ITEMV_ *ItemPtr){
-    _ITEMV_ *Item = ItemPtr;
-    while(Item && Item->Left != NULL) Item = Item->Left;
-    return Item;
-}
-
-// Zatial to je ze musis poslat odkaz &Item->Lokal
-// Odstranenie premennej, pre funkcie to nemusi byt tie sa odstranovat nebudu
-// Toto je este v procese ale funguje
-_ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name) {
+// Odstrani prvok z tabulky
+_ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name){
     _ITEMV_ *Item = *ItemPtr;
-    if(Item == NULL) return NULL;
+    if(Item == NULL) return Item;
     if (strcmp(Name, Item->Name) < 0){
-        return DeleteV((&Item->Left), Name);
+        Item->Left = DeleteV((&Item->Left), Name);
+        return Item;
     }
     else if (strcmp(Name, Item->Name) > 0){
-        return DeleteV(&(Item->Right), Name);
-    } else {
+        Item->Right = DeleteV(&(Item->Right), Name);
+        return Item;
+    } else {        // Ak ma jedneho naslednika alebo ziadneho
         if(Item->Left == NULL){
             _ITEMV_ *Del = Item->Right;
             FreeItemV(Item);
@@ -127,18 +121,48 @@ _ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name) {
             FreeItemV(Item);
             Item = NULL;
             return Del;
+        } else {        // Ak ma dvoch naslednikov
+            _ITEMV_ *Parent = Item;
+            _ITEMV_ *Succesor = Item->Right;
+            while(Succesor->Left != NULL){
+                Parent = Succesor;
+                Succesor = Succesor->Left;
+            }
+
+            if(Parent != Item) Parent->Left = Succesor->Right;
+            else Parent->Right = Succesor->Right;
+
+            // Okopiruj data z prenasaneho prvku
+            Item->Type = Succesor->Type;
+            strcpy(Item->Name, Succesor->Name);
+            Item->Dive = Succesor->Dive;
+            Item->Init = Succesor->Init;
+
+            FreeItemV(Succesor);
+            return Item;
         }
-        _ITEMV_ *Del = ReplaceItem(Item->Right);
-
-        // Okopiruj data z prenasaneho prvku
-        Item->Type = Del->Type;
-        strcpy(Item->Name, Del->Name);
-        Item->Dive = Del->Dive;
-        Item->Init = Del->Init;
-
-        Item->Right = DeleteV(&Item->Right, Del->Name);
     }
-    return Item;
+}
+
+// Najde meno premennej ktoru treba odstranit
+char *FindName(_ITEMV_ *Item, char *Name, int dive){
+    if(Name != NULL) return Name;
+    if(Item != NULL){
+        Name = FindName(Item->Left, Name, dive);
+        Name = FindName(Item->Right, Name, dive);
+        if(Name != NULL) return Name;
+        if(Item->Dive > dive) return Item->Name;
+    }
+    return NULL;
+}
+
+void EditVariable(_ITEMV_ **ItemPtr, int dive){
+    _ITEMV_ *Item = *ItemPtr;
+    char *Name = FindName(Item, NULL, dive);
+    while (Name != NULL) {
+        DeleteV(&Item, Name);
+        Name = FindName(Item, NULL, dive);
+    }
 }
 
 /// ------------------------------------------------------------------------------ VARIABLE ----------------------------
@@ -219,7 +243,7 @@ _ITEMF_ *InitF(_ITEMF_ **Root, _ITEMF_ **ItemPtr, char *Name) {
         Item->Local = NULL;
         Item->Params = NULL;
         Item->Type = T_KEYWORD_EMPTY;
-        Item->Root = *Root;
+        Item->Root = Item;
         Item->Left = NULL;
         Item->Right = NULL;
     } else return NULL;

@@ -4,24 +4,11 @@
  */
 
 #include "parser.h"
-#include "str.h"
 #include "stack.h"
+#include "symtable.h"
 
 #include <stdbool.h>
 #include <string.h>
-
-/// Jednotlive prvky v String liste
-typedef struct StringElement {
-    struct StringElement *ptr;
-    char *data;
-} *StringElementPtr;
-
-/// Struktura String List
-typedef struct {
-    StringElementPtr Actual;
-    StringElementPtr First;
-    StringElementPtr Last;
-} StringList;
 
 #ifndef GENERATOR_H
 #define GENERATOR_H
@@ -33,30 +20,6 @@ void my_push();
 
 /// Popne int z vrcholu zasobniku
 void my_pop();
-
-// _________________________________________Instruction List Funkcie____________________________________________________
-
-/// Inicializacia Stringlistu
-/// @param List - ukazovatel na Stringlist
-void InitListString(StringList *List);
-
-/// Ukoncenie Stringlistu
-/// @param List - ukazovatel na Stringlist
-void DisposeListString(StringList *List);
-
-/// Vlozenie stringu na 1. poziciu v Stringliste
-/// @param List - ukazovatel na Stringlist
-/// @param val - vkladany string
-void InsertFirstString(StringList *List, char *val);
-
-/// Vlozenie stringu na poslednu poziciu v Stringliste
-/// @param List - ukazovatel na Stringlist
-/// @param val - vkladany string
-void InsertLastString(StringList *List, char *val);
-
-/// Zmazanie strignu z 1. pozicie v Stringliste
-/// @param List - ukazovatel na Stringlist
-void DeleteFirstString(StringList *List);
 
 // _________________________________________Funckie na Generovanie______________________________________________________
 
@@ -70,28 +33,24 @@ void G_BigEnd();
 /// @param id - id premennej
 /// @param scope - rozsah
 /// @param in_for - True ak je vo for
-void G_DefVar(char *id, int scope, bool in_for);
-
-/// Generovanie navratovej premennej
-/// @param NumberOfReturns - pocet generovanych navratovych premennych
-void G_RetVal(int number_of_return_values);
+void G_DefVar(char *Name, int Dive, bool in_for);
 
 /// Generovanie parametrov
 /// @param params - ukazovatel na string s parametramy
-void G_Param(string *params);
+void G_Param(_PARAM_ *param);
 
 /// Generovanie parametrov a ich inicializacia
 /// @param last - pointer na strukturu token
-/// @param local_st -  pointer na strukturu zasobnik
-void G_CallParam(_STACK_ *local_st);
+/// @param local_st - pointer na strukturu zasobnik
+void G_CallParam(_STACK_ *local_st, _ITEMF_ *Table);
 
 /// Generovanie instrukcie na vlozenie hodnoty do zasobniku
 /// @param type typ tokrnu
 /// @param value pointer na string
 /// @param local_st pointer na strukturu zasobnik
-void G_PushParam(Token_Type type, char *value, _STACK_ *local_st);
+void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table);
 
-/// Generuje meno premennej ktore vlozi na 1. miesto v Stringliste Vars
+/// Generuje meno premennej ktore vlozi na 1. miesto v _STACK_ Vars
 /// @param var_name - meno premennej
 /// @param scope - rozsah
 void G_AddToVariable(char *var_name, int scope);
@@ -148,7 +107,7 @@ void G_LABEL_end();
 void G_StartFunction(char *function);
 
 /// generovanie end funkcie
-void G_EndFunction();
+void G_EndFunction(char *function);
 
 /// generovanie start z IF
 void G_if_start();

@@ -12,9 +12,6 @@
 
 unsigned int ID = 0;
 unsigned int elseCounter = 0;
-StringList ListOfStrings;
-StringList Vars;
-StringList Exps;
 
 int IntStack[1000];
 int top = -1;
@@ -31,93 +28,13 @@ void my_pop() {
     top = top - 1;
 }
 
-// _________________________________________Instruction List Funkcie____________________________________________________
-
-void InitListString(StringList *List) {
-    List->First = NULL;
-    List->Actual = NULL;
-    List->Last = NULL;
-}
-
-void DisposeListString(StringList *List) {
-    if (List->First != NULL) {
-        while (List->First->ptr != NULL) {
-            StringElementPtr elemPtr;
-            elemPtr = List->First->ptr;
-            List->First->ptr = elemPtr->ptr;
-            free(elemPtr->data);
-            free(elemPtr);
-        }
-        free(List->First->data);
-        free(List->First);
-
-        List->First = NULL;
-        List->Actual = NULL;
-        List->Last = NULL;
-    }
-}
-
-void InsertFirstString(StringList *List, char *val) {
-    StringElementPtr newElemPtr = malloc(sizeof(struct StringElement));
-
-    if (newElemPtr == NULL) {
-        return;
-    } else {
-        newElemPtr->data = val;
-        newElemPtr->ptr = List->First;
-        List->First = newElemPtr;
-        if (List->Last == NULL) {
-            List->Last = List->First;
-        }
-    }
-}
-
-void InsertLastString(StringList *List, char *val) {
-    StringElementPtr newElemPtr = malloc(sizeof(struct StringElement));
-
-    if (newElemPtr == NULL) {
-        return;
-    } else {
-        newElemPtr->data = val;
-        newElemPtr->ptr = NULL;
-        if (List->Last != NULL)
-            List->Last->ptr = newElemPtr;
-        List->Last = newElemPtr;
-        if (List->First == NULL) {
-            List->First = List->Last;
-        }
-    }
-
-}
-
-void DeleteFirstString(StringList *List) {
-    StringElementPtr elemPtr;
-
-    if (List->First != NULL) {
-        if (List->Actual == List->First)
-            List->Actual = NULL;
-
-        elemPtr = List->First->ptr;
-        free(List->First->data);
-        free(List->First);
-        List->First = elemPtr;
-
-        if (List->First == NULL)
-            List->Last = NULL;
-    }
-}
-
 // _________________________________________Funckie na Generovanie______________________________________________________
 
 
 void G_BigStart() {
-    InitListString(&ListOfStrings);     // List stringob
-    InitListString(&Vars);              // List premennych
-    InitListString(&Exps);              // List exponentov
-
     printf(".IFJcode22\n");
     printf("CREATEFRAME\n");
-    printf("CALL $function$main\n");
+    printf("CALL $$main\n");
     printf("JUMP $$big_end\n");
 
     G_reads();
@@ -131,6 +48,9 @@ void G_BigStart() {
     G_substring();
     G_ord();
     G_chr();
+
+    printf("\n# main body\n");
+    printf("LABEL $$main\n");
 }
 
 void G_BigEnd() {
@@ -138,101 +58,100 @@ void G_BigEnd() {
     printf("EXIT int@0\n");
 }
 
-
-void G_DefVar(char *id, int scope, bool in_for) {       //
-    if (in_for) {
-        printf("MOVE LF@%s$%d nil@nil\n", id, scope);
-    } else {
-        printf("DEFVAR LF@%s$%d\n", id, scope);
-    }
-
-}
-
-void G_RetVal(int number_of_return_values) {
-    for (int i = 1; i <= number_of_return_values; i++)
-        printf("DEFVAR LF@retval$%d\n", i);
-}
-
-void G_Param(string *params) {
-    if (params->len <= 0)
-        return;
-    printf("DEFVAR LF@");
-    for (int i = 0; i < params->len - 1; i++) {
-        if (params->str[i] != '#') {
-            printf("%c", params->str[i]);
-        } else {
-            printf("$0\nDEFVAR LF@");
-        }
-    }
-    printf("$0\n");
-    char tmpchar[params->len];
-    int j = 0;
-    for (int i = 0; i < params->len; i++) {
-        if (params->str[i] != '#') {
-            tmpchar[j++] = params->str[i];
-        } else {
-            tmpchar[j] = '\0';
-            printf("POPS LF@%s$0\n", tmpchar);
-            j = 0;
-        }
+void G_CallParam(_STACK_ *local_st, _ITEMF_ *Table) {
+    if (local_st == NULL) return;
+    while (local_st->Token.Type != T_TYPE_NULL) {
+        G_PushParams(local_st, Table);
+        local_st = Stack_Pop(local_st);
     }
 }
 
-void G_CallParam(_STACK_ *local_st) {
-    if (local_st == NULL)
-        return;
-    while (local_st->Token.Type != T_TYPE_OPEN_BRACKET) {
-        G_PushParams(local_st->Token.Type, &local_st->Token.String, local_st);
-        Stack_Pop();
-    }
-}
-
-void G_PushParams(Token_Type type, char *value, _STACK_ *local_st) {
-    st_item *item;
-    switch (type) {
+void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
+    switch (local_st->Token.Type) {
         case T_TYPE_INT_DATATYPE:
-            printf("PUSHS int@%s\n", value);
+            printf("PUSHS int@%s\n", local_st->Token.String); // TODO:
             break;
-
         case T_TYPE_FLOAT_DATATYPE:
-            printf("PUSHS float@%a\n", Str_to_Float(value));
+            printf("PUSHS float@%a\n", atof(local_st->Token.String)); // TODO:
             break;
         case T_TYPE_VARIABLE:
-            item = stack_lookup(local_st, value);
-            printf("PUSHS LF@%s$%d\n", value, item->data.scope);
+            _ITEMV_ *ItemV = SearchV(&Table->Local, local_st->Token.String);
+            printf("PUSHS LF@%s$%d\n", local_st->Token.String, ItemV->Dive);
             break;
-
         case T_TYPE_STRING_DATATYPE:
-            printf("PUSHS string@%s\n", value);
+            printf("PUSHS string@%s\n", local_st->Token.String); // TODO:
             break;
-
         default:
             break;
     }
-
 }
 
-void G_AddToVariable(char *var_name, int scope) {
-    char *tmp = malloc(strlen(var_name) + BLOCK_SIZE);
-    if (tmp == NULL)
-        exit(99);
-    if (scope < 0)
-        sprintf(tmp, "%s", var_name);
-    else
-        sprintf(tmp, "%s$%i", var_name, scope);
+void G_CallStart(char *function, int count_of_vars) {
+    printf("CREATEFRAME\n");
+    printf("CLEARS\n");
+    if (strcmp(function, "write") == 0) {
+        printf("DEFVAR TF@write$0\n");
+        printf("MOVE TF@write$0 int@%d\n", count_of_vars);
+    }
+}
+
+void G_Call(char *function) {
+    printf("CALL func$%s\n", function);
+}
+
+void G_LABEL_start(char *label) {
+    printf("LABEL func$%s\n", label);
+    printf("PUSHFRAME\n");
+}
+
+void G_LABEL_end() {
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+}
+
+void G_StartFunction(char *function) {
+    printf("\n#Start of function A %s\n", function);
+    G_LABEL_start(function);
+}
+
+void G_EndFunction(char *function) {
+    G_LABEL_end();
+    printf("#End of function %s\n", function);
+}
+
+void G_Param(_PARAM_ *param) {
+    if (param == NULL) return;
+    while(param != NULL) {
+        printf("DEFVAR LF@%s$1\n", param->Name);
+        printf("POPS LF@%s$1\n", param->Name);
+        param = param->Next;
+    }
+    printf("DEFVAR LF@retval$1\n");
+}
+
+/* void G_DefVar(char *Name, int Dive, bool in_for) {
+    if (in_for) printf("MOVE LF@%s$%d nil@nil\n", Name, Dive);
+    else printf("DEFVAR LF@%s$%d\n", Name, Dive);
+} */
+
+/* void G_AddToVariable(char *var_name, int scope) {
+    char *tmp = malloc(strlen(var_name) + 1);
+    if (tmp == NULL) exit(99);
+    if (scope < 0) sprintf(tmp, "%s", var_name);
+    else sprintf(tmp, "%s$%i", var_name, scope);
     InsertFirstString(&Vars, tmp);
-}
+} */
 
-void G_AddToExponent(char *exp, bool in_for) {
+/* void G_AddToExponent(char *exp, bool in_for) {
     char *tmp = malloc(strlen(exp) + 1);
     strcpy(tmp, exp);
     if (in_for)
         InsertFirstString(&Exps, tmp);
     else
         InsertLastString(&Exps, tmp);
-}
+} */
 
-void G_ForAss(int NumberOfVariables) {
+/* void G_ForAss(int NumberOfVariables) {
     if (NumberOfVariables <= 0)
         return;
     printf("CREATEFRAME\n");
@@ -252,9 +171,9 @@ void G_ForAss(int NumberOfVariables) {
         DeleteFirstString(&Vars);
         my_pop();
     }
-}
+} */
 
-void G_Initialization(int NumberOfVariables, bool in_for) {
+/* void G_Initialization(int NumberOfVariables, bool in_for) {
     int tmp_top;
     if (NumberOfVariables <= 0)
         return;
@@ -277,9 +196,9 @@ void G_Initialization(int NumberOfVariables, bool in_for) {
         my_pop();
     }
 
-}
+} */
 
-void G_AssReturn(int NumberOfVariables) {
+/* void G_AssReturn(int NumberOfVariables) {
     for (int i = NumberOfVariables; i > 0; i--) {
         if (strcmp(Vars.First->data, "_") == 0) {
             DeleteFirstString(&Vars);
@@ -288,9 +207,9 @@ void G_AssReturn(int NumberOfVariables) {
         printf("MOVE LF@%s TF@retval$%i\n", Vars.First->data, i);
         DeleteFirstString(&Vars);
     }
-}
+} */
 
-void G_SetReturnVal(int NumberOfReturns, bool in_for) {
+/* void G_SetReturnVal(int NumberOfReturns, bool in_for) {
 
     if (!in_for) {
         for (int i = 1; i <= NumberOfReturns; i++) {
@@ -305,22 +224,21 @@ void G_SetReturnVal(int NumberOfReturns, bool in_for) {
             printf("POPS LF@retval$%i\n", i);
         }
     }
-}
+} */
 
-
-void G_ForStart(char *expression) {
+/* void G_ForStart(char *expression) {
     printf("LABEL CHECK$FOR$%d\n", ID);
     printf("%s", expression);
     G_ForJump();
-}
+} */
 
-void G_ForJump() {
+/* void G_ForJump() {
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS END$FOR$%d\n", ID);
     my_push();
-}
+} */
 
-void G_ForEnd() {
+/* void G_ForEnd() {
     StringElementPtr tmp = Vars.First;
     int count = 0;
     while (tmp != NULL) {
@@ -330,60 +248,26 @@ void G_ForEnd() {
     printf("JUMP CHECK$FOR$%d\n", IntStack[top]);
     printf("LABEL END$FOR$%d\n", IntStack[top]);
     my_pop();
-}
+} */
 
-void G_CallStart(char *function, int count_of_vars) {
-    printf("CREATEFRAME\n");
-    printf("CLEARS\n");
-    if (strcmp(function, "print") == 0) {
-        printf("DEFVAR TF@$0\n");
-        printf("MOVE TF@$0 int@%d\n", count_of_vars);
-    }
-}
-
-void G_Call(char *function) {
-    printf("CALL func$%s\n", function);
-}
-
-void G_LABEL_start(char *label) {
-    printf("LABEL func$%s\n", label);
-    printf("PUSHFRAME\n");
-}
-
-void G_LABEL_end() {
-    printf("POPFRAME\n");
-    printf("RETURN\n");
-}
-
-void G_StartFunction(char *function) {
-    printf("#Start of function\n");
-    G_LABEL_start(function);
-}
-
-void G_EndFunction() {
-    printf("#End of function\n");
-    G_LABEL_end();
-}
-
-
-void G_IfStart(char *expression) {
+/* void G_IfStart(char *expression) {
     printf("#IF $if$%d\n", ID);
     printf("%s", expression);
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS $if$%d$else$%d\n", ID, elseCounter);
     my_push();
-}
+} */
 
-void G_Else() {
+/* void G_Else() {
     printf("JUMP $if$%d$end\n", IntStack[top]);
     printf("LABEL $if$%d$else$%d\n", IntStack[top], elseCounter);
-}
+} */
 
-void G_IfEnd() {
+/* void G_IfEnd() {
     printf("LABEL $if$%d$end\n", IntStack[top]);
     my_pop();
     elseCounter = 0;
-}
+} */
 
 // _________________________________________Vstavane funkcie IFJ22______________________________________________________
 
@@ -704,6 +588,8 @@ void G_chr() {
 
     printf("DEFVAR LF@chr$int\n");
     printf("DEFVAR LF@retval$1\n");
+    printf("POPS LF@chr$int\n");
+    
     printf("INT2CHAR LF@retval$1 LF@chr$int\n");
     printf("POPFRAME\n");
     printf("RETURN\n");

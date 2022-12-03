@@ -2,7 +2,6 @@
  * IFJ Projekt 2022
  * @author <xkento00> Samuel Kentoš
  */
-
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -11,6 +10,7 @@
 #define _PARAM_ struct Param
 #define _ITEMF_ struct ItemF
 #define _ITEMV_ struct ItemV
+#define _WRAP_ struct Wrap
 
 #ifndef PARSER_CHECK
 #define PARSER_CHECK
@@ -115,15 +115,25 @@ struct ItemF {
     _ITEMF_ *Right;
 };
 
+struct Wrap {
+    char Character;
+    _TOKEN_ *Token;
+    _ITEMF_ *Table;
+    _STACK_ *Stack;
+    FILE* Source;
+    int Dive;
+};
+
 _TOKEN_ *T_Create();
 _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword Keyword);
 
 int Term(Token_Type Type);
+void End(_WRAP_ *Wrap);
 
-int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
-int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table);
-int Function(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
-int Variable(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table);
-int Start(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive);
+int Keyword(_WRAP_ *Wrap);
+int F_Declare(_WRAP_ *Wrap);
+int Function(_WRAP_ *Wrap);
+int Variable(_WRAP_ *Wrap);
+int Start(_WRAP_ *Wrap);
 
 #endif

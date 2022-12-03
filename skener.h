@@ -13,9 +13,9 @@
 #ifndef SKENER_CHECK
 #define SKENER_CHECK
 
-int Prolog(FILE* Source, int *Character);
-int Comment(int *Character, FILE* Source);
-int Strings(int *Character, char *String, _TOKEN_ *Token, int Type, FILE* Source);
-int Scan(_TOKEN_ *Token, FILE* Source, int *Character);
+int Prolog(_WRAP_ *Wrap);
+int Comment(_WRAP_ *Wrap);
+int Strings(_WRAP_ *Wrap, char *String, int Type);
+int Scan(_WRAP_ *Wrap);
 
 #endif

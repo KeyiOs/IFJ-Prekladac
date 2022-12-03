@@ -29,11 +29,11 @@ _ITEMV_ *GetV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type);
 // Najdi a vrat premennu ak nenajde vytvori novu
 _ITEMV_ *SearchV(_ITEMV_ **ItemPtr, char *Name);
 
-_ITEMV_ *ReplaceItem(_ITEMV_ *ItemPtr);
-
-// Zatial to je ze musis poslat odkaz &Item->Lokals
-// Odstranenie premennej, pre funkcie to nemusi byt tie sa odstranovat nebudu
 _ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name);
+
+char *FindName(_ITEMV_ *Item, char *Name, int dive);
+
+void EditVariable(_ITEMV_ **ItemPtr, int dive);
 
 /// -------------------------------------------------------- PARAM ----------
 // Uvolni alokovanu pamat pre parametre

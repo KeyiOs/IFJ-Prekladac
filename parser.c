@@ -7,6 +7,8 @@
 #include "skener.h"
 #include "parser.h"
 #include "symtable.h"
+#include "generator.h"
+#include "stack.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -64,7 +66,7 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword K
  *  • If term -> return 0
  *  • Else -> return 1
  */
-int Term(Token_Type Type) {
+int Term(Token_Type Type){
     if(Type == T_TYPE_STRING_DATATYPE ||
        Type == T_TYPE_FLOAT_DATATYPE ||
        Type == T_TYPE_NULL ||
@@ -74,81 +76,115 @@ int Term(Token_Type Type) {
 }
 
 /*
+ *  • Dealokuje vsetky dynamicke premenne
+ */
+void End(_WRAP_ *Wrap){
+    if(Wrap->Source != NULL) fclose(Wrap->Source);
+    free(Wrap->Stack);
+    free(Wrap->Token);
+    Wrap->Stack = NULL;
+    Wrap->Token = NULL;
+    Wrap->Table = FreeST(Wrap->Table);
+    free(Wrap);
+    Wrap = NULL;
+}
+
+/*
  *  • Analyza syntaxe pre klucove slovo
  */
-int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive){
+int Keyword(_WRAP_ *Wrap){
     int ERR;                                                                // Deklaracia
+    _TOKEN_ *Token = Wrap->Token;                                           //
+    _ITEMF_ *Table = Wrap->Table;                                           //
+    FILE* Source = Wrap->Source;                                            //
+    int Character = Wrap->Character;                                        //
+    int Dive = Wrap->Dive;                                                  //
     if(Token->Keyword == T_KEYWORD_FUNCTION && Dive == 0) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Meno Funkcie
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Meno Funkcie
         if(Token->Type != T_TYPE_FUNCTION) return 2;                        //
         char *Name = Token->String;                                         //
         if(SearchF(&Table, Name) != NULL) return 3;                         // Overenie Funkcie
-        if((ERR = F_Declare(Token, Source, Character, Table)) != 0) return ERR;
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Mnozinova Zatvorka
+        if((ERR = F_Declare(Wrap)) != 0) return ERR;                        //
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
-        if((ERR = Start(Token, Source, Character, SearchF(&Table, Name), Dive + 1)) != 0) return ERR;
+        _WRAP_ Wrap_TMP = *Wrap;                                            //
+        Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
+        Wrap_TMP.Table = SearchF(&Table, Name);                             //
+        if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
+        //EditVariable((_ITEMV_ **)Wrap->Table->Local, Wrap->Dive);         //
     } else if(Token->Keyword == T_KEYWORD_RETURN && Dive != 0) {
         // TODO: Analyza vyrazov                                            // TODO: Odstranit
         while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
         }                                                                   // TODO: Odstranit
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       // Bodkociarka
     } else if(Token->Keyword == T_KEYWORD_WHILE) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         // TODO: Analyza vyrazov                                            // TODO: Odstranit
         while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // TODO: Odstranit
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
         }                                                                   // TODO: Odstranit
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Mnozinova Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
-        if((ERR = Start(Token, Source, Character, Table, Dive + 1)) != 0) return ERR;
+        _WRAP_ Wrap_TMP = *Wrap;                                            //
+        Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
+        if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
     } else if(Token->Keyword == T_KEYWORD_ELSE) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Mnozinova Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
-        if((ERR = Start(Token, Source, Character, Table, Dive + 1)) != 0) return ERR;
+        _WRAP_ Wrap_TMP = *Wrap;                                            //
+        Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
+        if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
     } else if(Token->Keyword == T_KEYWORD_IF) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         // TODO: Analyza vyrazov                                            // TODO: Odstranit
         while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // TODO: Odstranit
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
         }                                                                   // TODO: Odstranit
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Mnozinova Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
-        if((ERR = Start(Token, Source, Character, Table, Dive + 1)) != 0) return ERR;
+        _WRAP_ Wrap_TMP = *Wrap;                                            //
+        Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
+        if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
     } else if(Token->Keyword == T_KEYWORD_SUBSTRING) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // String
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // String
         if(Token->Type != T_TYPE_STRING_DATATYPE) {                         //
             if(Token->Type != T_TYPE_VARIABLE) return 2;                    // 
             _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);       //
             if(ItemTMP == NULL) return 5;                                   //
             if(ItemTMP->Type != T_TYPE_STRING_DATATYPE) return 4;           //
         }                                                                   //
+        G_Stack_Push(Wrap->Stack, Token);                                   //
         for(int i = 0; i < 2; i++) {                                        //
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // Ciarka
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // Ciarka
             if(Token->Type != T_TYPE_COMMA) return 2;                       //
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // Int
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // Int
             if(Token->Type != T_TYPE_INT_DATATYPE) {                        //
                 if(Token->Type != T_TYPE_VARIABLE) return 2;                //
                 _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);   //
                 if(ItemTMP == NULL) return 5;                               //
                 if(ItemTMP->Type != T_TYPE_INT_DATATYPE) return 4;          //
             }                                                               //
+            G_Stack_Push(Wrap->Stack, Token);                               //
         }                                                                   //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Zatvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        G_CallStart("substring", 0);                                        //
+        G_CallParam(Wrap->Stack, Wrap->Table);                              //
+        G_Call("substring");                                                //
     } else if(Token->Keyword == T_KEYWORD_FLOATVAL ||
               Token->Keyword == T_KEYWORD_INTVAL) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Number
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Number
         if(Token->Type != T_TYPE_FLOAT_DATATYPE &&                          //
            Token->Type != T_TYPE_NULL_DATATYPE &&                           //
            Token->Type != T_TYPE_INT_DATATYPE) {                            //
@@ -159,16 +195,26 @@ int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Di
                ItemTMP->Type != T_TYPE_NULL_DATATYPE &&                     //
                ItemTMP->Type != T_TYPE_INT_DATATYPE) return 4;              //
         }                                                                   //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Zatvorena Zatvorka
+        G_Stack_Push(Wrap->Stack, Token);                                   //
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        if(Token->Keyword == T_KEYWORD_FLOATVAL){                           //
+            G_CallStart("floatval", 0);                                     //
+            G_CallParam(Wrap->Stack, Wrap->Table);                          //
+            G_Call("floatval");                                             //
+        } else if(Token->Keyword == T_KEYWORD_INTVAL){                      //
+            G_CallStart("intval", 0);                                       //
+            G_CallParam(Wrap->Stack, Wrap->Table);                          //
+            G_Call("intval");                                               //
+        }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_STRVAL ||
               Token->Keyword == T_KEYWORD_STRLEN ||
               Token->Keyword == T_KEYWORD_ORD) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // String
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // String
         if(Token->Type != T_TYPE_STRING_DATATYPE &&                         //
            Token->Type != T_TYPE_NULL_DATATYPE) {                           //
             if(Token->Type != T_TYPE_VARIABLE) return 2;                    //
@@ -177,15 +223,29 @@ int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Di
             if(ItemTMP->Type != T_KEYWORD_STRING &&                         //
                ItemTMP->Type != T_KEYWORD_NULL) return 4;                   //
         }                                                                   //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Zatvorena Zatvorka
+        G_Stack_Push(Wrap->Stack, Token);                                   //
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        if(Token->Keyword == T_KEYWORD_STRVAL){                             //
+            G_CallStart("strval", 0);                                       //
+            G_CallParam(Wrap->Stack, Wrap->Table);                          //
+            G_Call("strval");                                               //
+        } else if(Token->Keyword == T_KEYWORD_STRLEN){                      //
+            G_CallStart("strlen", 0);                                       //
+            G_CallParam(Wrap->Stack, Wrap->Table);                          //
+            G_Call("strlen");                                               //
+        } else{                                                             //
+            G_CallStart("ord", 0);                                          //
+            G_CallParam(Wrap->Stack, Wrap->Table);                          //
+            G_Call("ord");                                                  //
+        }
     } else if(Token->Keyword == T_KEYWORD_WRITE) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // Zatvorena Zatvorka
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // Term
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // Term
             if(Token->Type != T_TYPE_STRING_DATATYPE &&                     //
                Token->Type != T_TYPE_FLOAT_DATATYPE &&                      //      
                Token->Type != T_TYPE_NULL_DATATYPE &&                       //
@@ -195,25 +255,41 @@ int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Di
                 if(ItemTMP == NULL) return 5;                               //
                 if(1 > ItemTMP->Type || ItemTMP->Type > 4) return 4;        //
             }                                                               //
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // Ciarka
+            G_Stack_Push(Wrap->Stack, Token);                               //
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // Ciarka
             if(Token->Type != T_TYPE_COMMA &&                               //
                Token->Type != T_TYPE_CLOSED_BRACKET) return 2;              //
         }                                                                   //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        G_CallStart("write", 0);                                            //
+        G_CallParam(Wrap->Stack, Wrap->Table);                              //
+        G_Call("write");                                                    //
     } else if(Token->Keyword == T_KEYWORD_READS ||
               Token->Keyword == T_KEYWORD_READI ||
               Token->Keyword == T_KEYWORD_READF) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Zatvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        if(Token->Keyword == T_KEYWORD_READS){                              //
+            G_CallStart("reads", 0);                                        //
+            G_Call("reads");                                                //
+        }                                                                   //
+        else if(Token->Keyword == T_KEYWORD_READI){                         //
+            G_CallStart("readi", 0);                                        //
+            G_Call("readi");                                                //
+        }                                                                   //
+        else{                                                               //
+            G_CallStart("readf", 0);                                        //
+            G_Call("readf");                                                //
+        }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_CHR) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Otvorena Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Int
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Int
         if(Token->Type != T_TYPE_NULL_DATATYPE &&                           //
            Token->Type != T_TYPE_INT_DATATYPE) {                            //
             if(Token->Type != T_TYPE_VARIABLE) return 2;                    //
@@ -222,10 +298,14 @@ int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Di
             if(ItemTMP->Type != T_TYPE_NULL_DATATYPE &&                     //
                ItemTMP->Type != T_TYPE_INT_DATATYPE) return 4;              //
         }                                                                   //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Zatvorena Zatvorka
+        G_Stack_Push(Wrap->Stack, Token);                                   //
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Bodkociarka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
+        G_CallStart("chr", 0);                                              //
+        G_CallParam(Wrap->Stack, Wrap->Table);                              //
+        G_Call("chr");                                                      //
     } else return 2;
 
     return 0;
@@ -234,34 +314,39 @@ int Keyword(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Di
 /*
  *  • Deklaracia funkcie
  */
-int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table){
+int F_Declare(_WRAP_ *Wrap){
     int ERR;                                                                // Deklaracia
+    _TOKEN_ *Token = Wrap->Token;                                           //
+    _ITEMF_ *Table = Wrap->Table;                                           //
     char *Name = Token->String;                                             //
-    if((ERR = InsertF(&Table, &Table, Token->String)) != 0) return ERR;     // Vlozenie do Symtable
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Otvorena Zatvorka
+    if((ERR = InsertF(&Table, &Table, Token->String)) != 0) return ERR;     //
+    G_StartFunction(Name);                                                  //
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Otvorena Zatvorka
     if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                        //
     while(Token->Type != T_TYPE_CLOSED_BRACKET) {                           // Zatvorena Zatvorka
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Datovy Typ
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Datovy Typ
         Token_Keyword Type = Token->Keyword;                                //
         if(Token->Type != T_TYPE_KEYWORD) return 2;                         //
         if(Token->Keyword != T_KEYWORD_STRING &&                            //
            Token->Keyword != T_KEYWORD_FLOAT &&                             //
            Token->Keyword != T_KEYWORD_INT) return 2;                       //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Premenna
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Premenna
         if(Token->Type != T_TYPE_VARIABLE) return 2;                        //
         if((ERR = InsertParam(Name, Token->String, Type, &Table)) != 0) return ERR;
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Ciarka/Zatvorka
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Ciarka/Zatvorka
         if(Token->Type != T_TYPE_COMMA &&                                   //
            Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
     }                                                                       //
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Dvojbodka
+    _ITEMF_ *Function = SearchF(&Wrap->Table, Name);                        //
+    G_Param(Function->Params);                                              //
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Dvojbodka
     if(Token->Type != T_TYPE_COLON) return 2;                               //
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Datovy Typ
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Datovy Typ
     if(Token->Type != T_TYPE_KEYWORD) return 2;                             //
     if(Token->Keyword != T_KEYWORD_STRING &&                                //
        Token->Keyword != T_KEYWORD_FLOAT &&                                 //
        Token->Keyword != T_KEYWORD_INT) return 2;                           //
-    if((ERR = ReturnF(&Table, Name, Token->Keyword)) != 0) return 99;       //
+    if((ERR = ReturnF(&Wrap->Table, Name, Wrap->Token->Keyword)) != 0) return 99;
     return 0;
 }
 
@@ -269,35 +354,44 @@ int F_Declare(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table){
  *  • Analyza syntaxe pre funkciu
  *  • Overenie v Tabulke
  */
-int Function(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive){
+int Function(_WRAP_ *Wrap){
     int ERR;                                                                // Deklaracia
+    _TOKEN_ *Token = Wrap->Token;                                           //
+    _ITEMF_ *Table = Wrap->Table;                                           //
     char *Name = Token->String;                                             //
     _ITEMF_ *FunctionTMP = SearchF(&Table->Root, Name);                     //
     if(FunctionTMP == NULL) return 3;                                       //
     _PARAM_ *Params = FunctionTMP->Params;                                  //
 
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Otovrena Zatvorka
+    InsertV(&Wrap->Table->Local, "a", T_TYPE_INT_DATATYPE);                 // !Odstranit
+    InsertV(&Wrap->Table->Local, "b", T_TYPE_INT_DATATYPE);                 // !Odstranit
+
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Otovrena Zatvorka
     if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                        //
     while(Params) {                                                         // Pokial su tokeny
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Term
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Term
         if(Token->Type != T_TYPE_STRING_DATATYPE &&                         //
            Token->Type != T_TYPE_FLOAT_DATATYPE &&                          //      
            Token->Type != T_TYPE_NULL_DATATYPE &&                           //
            Token->Type != T_TYPE_INT_DATATYPE) {                            //
-            if(Token->Type != T_TYPE_VARIABLE) return 2;                    //
+            if(Token->Type != T_TYPE_VARIABLE) return 2;                    // Premenna
             _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);       //
             if(ItemTMP == NULL) return 5;                                   //
             if(1 > ItemTMP->Type || ItemTMP->Type > 4) return 4;            //
-            if(Params->Type - 16 != ItemTMP->Type) return 4;                     //
+            if(Params->Type - 16 != ItemTMP->Type) return 4;                //
         } else if(Params->Type - 16 != Token->Type) return 4;               //
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;         // Ciarka/Zatvorka
+        G_Stack_Push(Wrap->Stack, Token);                                   //
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Ciarka/Zatvorka
         if(Token->Type == T_TYPE_COMMA && Params->Next != NULL);            //
         else if(Token->Type == T_TYPE_CLOSED_BRACKET &&                     //
                 Params->Next == NULL);                                      //
         else return 2;                                                      //
         Params = Params->Next;                                              //
     }                                                                       //
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Bodkociarka
+    G_CallStart(Name, 0);                                                   //
+    G_CallParam(Wrap->Stack, Wrap->Table);                                  //
+    G_Call(Name);                                                           //
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Bodkociarka
     if(Token->Type != T_TYPE_SEMICOLON) return 2;                           //
 
     return 0;
@@ -307,18 +401,20 @@ int Function(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int D
  *  • Analyza syntaxe pre premennu
  *  • Overenie/Deklaracia v Tabulke
  */
-int Variable(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table){
+int Variable(_WRAP_ *Wrap){
     int ERR;
-    if((ERR = Scan(Token, Source, Character)) != 0) return ERR;             // Rovna sa
+    _TOKEN_ *Token = Wrap->Token;
+
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Rovna sa
     if(Token->Type != T_TYPE_EQUAL) {                                       //
         // TODO: Analyza vyrazov + Pridat uz nacitanu premennu              // TODO: Odstranit
         while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
         }                                                                   // TODO: Odstranit
     } else {                                                                //
         // TODO: Analyza vyrazov                                            // TODO: Odstranit
         while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Token, Source, Character)) != 0) return ERR;     // TODO: Odstranit
+            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
         }                                                                   // TODO: Odstranit
     }                                                                       //
     if(Token->Type != T_TYPE_SEMICOLON) return 2;                           //
@@ -330,31 +426,33 @@ int Variable(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table){
 /*
  *  Vyhodnotenie zaciatocneho tokenu
  */
-int Start(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive){
+int Start(_WRAP_ *Wrap){
     int ERR;
     int IF = 0;
+    _TOKEN_ *Token = Wrap->Token;
+
     while(Token->Type != T_TYPE_EOF) {
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+        if((ERR = Scan(Wrap)) != 0) return ERR;
 
         if(IF == 1 && Token->Keyword != T_KEYWORD_IF) IF = 0;
         else if(IF == 0 && Token->Keyword == T_KEYWORD_IF) IF = 1;
         else if(IF == 0 && Token->Keyword == T_KEYWORD_ELSE) return 2;
         
         if(Token->Type == T_TYPE_KEYWORD) {
-            if((ERR = Keyword(Token, Source, Character, Table, Dive)) != 0) return ERR;
+            if((ERR = Keyword(Wrap)) != 0) return ERR;
         } else if(Token->Type == T_TYPE_FUNCTION) {
-            if((ERR = Function(Token, Source, Character, Table, Dive)) != 0) return ERR;
+            if((ERR = Function(Wrap)) != 0) return ERR;
         } else if(Token->Type == T_TYPE_VARIABLE) {
-            if((ERR = Variable(Token, Source, Character, Table)) != 0) return ERR;
+            if((ERR = Variable(Wrap)) != 0) return ERR;
         } else if(Term(Token->Type) == 0);                                  // TODO: Analyza vyrazov
         else if(Token->Type != T_TYPE_SEMICOLON && Token->Type != T_TYPE_EOF) {
             if(Token->Type != T_TYPE_CLOSED_CURLY_BRACKET) return 2;
-            if(Dive == 0) return 2;
+            if(Wrap->Dive == 0) return 2;
             else return 0;
         }
     }
 
-    if(Dive != 0) return 2;
+    if(Wrap->Dive != 0) return 2;
 
     return 0;
 }
@@ -363,33 +461,45 @@ int Start(_TOKEN_ *Token, FILE* Source, int *Character, _ITEMF_ *Table, int Dive
  *  Zaciatok programu
  */
 int main(){
-    _TOKEN_ *Token = T_Create();                                            // Inicializacia
-    if(Token == NULL){                                                      // - Token
+    _WRAP_ *Wrap = malloc(sizeof(_WRAP_));                                  // Inicializacia
+    if(Wrap == NULL){                                                       // - Struktura na parametre
+        ERR_Handler(99, Line);                                              //
+        return 99;                                                          //
+    }                                                                       //
+    Wrap->Token = T_Create();                                               // Inicializacia
+    if(Wrap->Token == NULL){                                                // - Token
         ERR_Handler(99, Line);                                              //
         return 99;                                                          //
     }                                                                       //
     _ITEMF_ *Table = NULL;                                                  // - Tabulka
-    Table = InitF(&Table, &Table, "main");                                  //
-    if(Table == NULL) {                                                     //
+    Wrap->Table = (_ITEMF_ *) InitF(&Table, &Table, "main");                //
+    if(Wrap->Table == NULL) {                                               //
         ERR_Handler(99, Line);                                              //
         return 99;                                                          //
     }                                                                       //
-    int Character;                                                          //
+    Wrap->Stack = Stack_Create(Wrap->Stack);                                //
+    if(Wrap->Stack == NULL) {                                               //
+        ERR_Handler(99, Line);                                              //
+        return 99;                                                          //
+    }                                                                       //
+    Wrap->Character = 0;                                                    //
+    Wrap->Dive = 0;                                                         //
     
-    FILE* Source;                                                           // Vstup
-    if(!(Source = fopen("Input.txt", "r"))) Source = stdin;                 //
+    Wrap->Source;                                                           // Vstup
+    if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;     //
 
-    int ERR = Prolog(Source, &Character);                                   // Prolog
+    int ERR = Prolog(Wrap);                                                 // Prolog
     if(ERR != 0) return ERR;                                                //
 
-    if((ERR = Start(Token, Source, &Character, Table, 0)) != 0) {           // Zaciatok Analyzi
+    G_BigStart();                                                           // Zaciatok Generatora
+    if((ERR = Start(Wrap)) != 0) {                                          // Zaciatok Analyzi
         ERR_Handler(ERR, Line);                                             //
         return ERR;                                                         //
     }                                                                       //
 
-    free(Token);                                                            // Uvolnenie Pamäte
-    Table = FreeST(Table);                                                  //
-    Token = NULL;                                                           //
+    G_EndFunction("main\n");                                                // Ukoncenie Generatora
+    G_BigEnd();                                                             //
+    End(Wrap);                                                              // Dealokovanie Pamäte
 
     return 0;                                                               // Ukoncenie
 }
