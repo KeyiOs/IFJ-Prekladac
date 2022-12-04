@@ -6,6 +6,7 @@
 #include "analyzator.h"
 #include "parser.h"
 #include "skener.h"
+#include "symtable.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,6 +40,6 @@ typedef enum {
 Term_Type Get_Term(Token_Type Type);                                    //typ terminalu tokenu
 Rel_Type Relation(Term_Type stack, Term_Type entry);                    //relace mezi 2 tokeny
 Term_Type find_first_terminal(_STACK_ *Stack);                          //nalezeni terminalu na stacku
-int expressions(_TOKEN_ *Token, FILE* Source, int *Character, int eq);  //eq - promenna s = -> 1, promenna bez = -> 0
+int expressions(_WRAP_ *Wrap, int eq);                                  //eq - promenna s = -> 1, promenna bez = -> 0
 
 #endif
