@@ -126,35 +126,40 @@ Term_Type find_first_terminal(_STACK_ *Stack) {
 }
 
 //prochazi vyrazy
-int expressions(_TOKEN_ *Token, FILE* Source, int *Character, int eq) { //TODO vyrazy v zavorkach
+int expressions(_WRAP_ *Wrap, int eq) {
     int ERR = 0;
     int loop = 0;
     int lb = 0; //jen urcuje jestli se zavolala funkce kvuli ( nebo kvuli promenne
+    int brackets = 0; //hlida pocet zavorek
     _TOKEN_ tmp_token;
     _STACK_ *Stack = Stack_Create();
     Term_Type current_t;
     Term_Type new_t;
 
-    if(Get_Term(Token->Type) == T_LB){ //privolani ( zavorkou
-        lb = 1;
-    }
+    if(Get_Term(Wrap->Token->Type) == T_LB) lb = 1;
     else if(eq == 1){ //preskakuje = cuz netreba na stacku i guess
-        if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
-        if(Get_Term(Token->Type) == T_DOLLAR) return 2; //aby nebyly veci typu: x = ;
+        if((ERR = Scan(Wrap)) != 0) return ERR;
+        if(Wrap->Token->Type == T_TYPE_FUNCTION || Wrap->Token->Type == T_TYPE_KEYWORD){ //nutne pro x = funkce/keyword
+            if((ERR = Scan(Wrap)) != 0) return ERR;
+        }
+        if(Get_Term(Wrap->Token->Type) == T_DOLLAR) return 2; //aby nebyly veci typu: x = ;
     }
-    else if(eq == 0 && Get_Term(Token->Type) == T_VAL) return 2; //aby nebyly veci typu: x x + 10
+    else if(eq == 0 && Get_Term(Wrap->Token->Type) == T_VAL) return 2; //aby nebyly veci typu: x x + 10
 
     while(loop < 1){
         current_t = find_first_terminal(Stack);
-        new_t = Get_Term(Token->Type);
+        new_t = Get_Term(Wrap->Token->Type);
+        if(Get_Term(Stack->Token.Type) == T_LB) brackets++;
+        else if(new_t == T_RB && brackets != 0 && current_t == T_LB) brackets--;
         if((new_t == T_VAL || new_t == T_LB) && Get_Term(Stack->Token.Type) == T_VAL){ //pokud je na vstupu promenna nebo ( a na zasobniku promenna tak return 2
             return 2;
         }
         else if((new_t == T_SMGREQ || new_t == T_TEQNTEQ) && lb == 0) return 2; //aby nebyly vyrazy typu: x = 5 < 10
+
         switch(Relation(current_t, new_t)){ //switch relaci mezi terminaly
             case T_OPEN_B:
-                Stack_Push(Stack, Token);
-                if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+                Stack_Push(Stack, Wrap->Token);
+                if((ERR = Scan(Wrap)) != 0) return ERR;
                 break;
             case T_CLOSED_B:
                 if(Get_Term(Stack->Token.Type) == T_VAL){
@@ -166,19 +171,36 @@ int expressions(_TOKEN_ *Token, FILE* Source, int *Character, int eq) { //TODO v
                 Stack_Push(Stack, &tmp_token);
                 break;
             case T_EQUAL:           //pro (E)
-                tmp_token = Stack->Token;
+                if(Get_Term(Stack->Token.Type) == T_LB && Get_Term(Wrap->Token->Type) == T_RB){ //prazdna funkce
+                    Stack = Stack_Pop(Stack);
+                    if((ERR = Scan(Wrap)) != 0) return ERR;
+                    return 0;
+                }
+                if(Get_Term(Stack->Token.Type) == T_VAL){
+                    tmp_token = Stack->Token;
+                }
                 for(int i = 0; i < 2; i++){
                     Stack = Stack_Pop(Stack);
                 }
                 Stack_Push(Stack, &tmp_token);
-                if((ERR = Scan(Token, Source, Character)) != 0) return ERR;
+                if(lb == 0){
+                    if((ERR = Scan(Wrap)) != 0) return ERR;
+                }
+                else{
+                    if(Stack->Token.Type == T_TYPE_NULL && brackets == 0) return 0;
+                    else if(Get_Term(Stack->Token.Type) == T_VAL){
+                        Stack = Stack_Pop(Stack);
+                        if(Stack->Token.Type == T_TYPE_NULL && brackets == 0) return 0;
+                    }
+                    else return 2;
+                }
                 break;
             case T_NOTHING:
                 if(current_t == T_DOLLAR && new_t == T_DOLLAR){
-                    if(Stack->Token.Type == T_TYPE_NULL) return 0;  //spravne se doslo az na konec vyrazu
+                    if(Stack->Token.Type == T_TYPE_NULL && brackets == 0) return 0;  //spravne se doslo az na konec vyrazu
                     else if(Get_Term(Stack->Token.Type) == T_VAL){  //pokud zustala jen 1 promenna tak pop a return ze spravne
                         Stack = Stack_Pop(Stack);
-                        if(Stack->Token.Type == T_TYPE_NULL) return 0;
+                        if(Stack->Token.Type == T_TYPE_NULL && brackets == 0) return 0;
                     }
                     else return 2;
                 }
