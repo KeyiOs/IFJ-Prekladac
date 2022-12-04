@@ -34,6 +34,7 @@ Term_Type Get_Term(Token_Type Type) {
         case T_TYPE_STRING_DATATYPE:
         case T_TYPE_FLOAT_DATATYPE:
         case T_TYPE_INT_DATATYPE:
+        case T_TYPE_NULL_DATATYPE:
             return T_VAL;
         case T_TYPE_OPEN_BRACKET:
             return T_LB;
@@ -137,14 +138,6 @@ int expressions(_WRAP_ *Wrap, int eq) {
     Term_Type new_t;
 
     if(Get_Term(Wrap->Token->Type) == T_LB) lb = 1;
-    else if(eq == 1){ //preskakuje = cuz netreba na stacku i guess
-        if((ERR = Scan(Wrap)) != 0) return ERR;
-        if(Wrap->Token->Type == T_TYPE_FUNCTION || Wrap->Token->Type == T_TYPE_KEYWORD){ //nutne pro x = funkce/keyword
-            if((ERR = Scan(Wrap)) != 0) return ERR;
-        }
-        if(Get_Term(Wrap->Token->Type) == T_DOLLAR) return 2; //aby nebyly veci typu: x = ;
-    }
-    else if(eq == 0 && Get_Term(Wrap->Token->Type) == T_VAL) return 2; //aby nebyly veci typu: x x + 10
 
     while(loop < 1){
         current_t = find_first_terminal(Stack);
