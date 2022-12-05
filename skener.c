@@ -228,11 +228,13 @@ int Prolog(_WRAP_ *Wrap){
         free(String);
         return 2;
     }
-    
+
     while(Wrap->Character == ' ' || Wrap->Character == 9) if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
     if(Wrap->Character == 10 || Wrap->Character == 13) {
+        printf("Start: %i\n", Wrap->Character);
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
-        if(Wrap->Character == 13 && (Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+        if(Wrap->Character == 10 && (Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+        printf("Start 2: %i\n", Wrap->Character);
         Line++;
     } else if(Wrap->Character == '/') {
         int cmnt;
@@ -245,8 +247,10 @@ int Prolog(_WRAP_ *Wrap){
 
     Length = 0;
     for(int i=0; i<25; i++) String[Length+i] = '\0';
+    printf("End: %i\n", Wrap->Character);
     while(Wrap->Character != ' ' && Wrap->Character != 9 && Wrap->Character != 10 && Wrap->Character != 13 && Wrap->Character != EOF && Length != 25) {
         String[Length] = Wrap->Character;
+        printf("Char[%i]: %i\n", Length, Wrap->Character);
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         Length++;
     }

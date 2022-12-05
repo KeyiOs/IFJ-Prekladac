@@ -1,6 +1,6 @@
 /**
  * IFJ Projekt 2022
- * @author
+ * @author Jakub Brciak
  */
 #ifndef SYM_CHECK
 #define SYM_CHECK

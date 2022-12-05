@@ -2,22 +2,11 @@
  * IFJ Projekt 2022
  * @author Jakub Brciak
  */
-
 #include "symtable.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define NAMES 5
-#define NAME_LEN 10
-#define STR_LEN 20
-
-/**
- 295 parser.c -> Zistujes ci je to priradenie, ked je tak mozes vlozit premennu do symtab
-
- Ked chces zapisat Variable do SymTable musis jej dat aj datovy typ, kludne aj na surovo T_TYPE_NULL_DATATYP
-**/
 
 /// ------------------------------------------------------------------------------ VARIABLE ----------------------------
 

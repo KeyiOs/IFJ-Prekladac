@@ -20,8 +20,8 @@
 typedef enum {
     T_ADDSUBCON = 1,// + | - | .
     T_DIVMUL,       // * | /
-    T_TEQNTEQ,      // === | !==
-    T_SMGREQ,       // < | > | <= | >=
+    T_EQ,           // === | !==
+    T_SMGR,         // < | > | <= | >=
     T_LB,           // (
     T_RB,           // )
     T_VAL,          // promenná
@@ -30,10 +30,11 @@ typedef enum {
 
 // Relace mezi terminály (podle tabulky zase)
 typedef enum {
-    T_CLOSED_B = 1, // >
-    T_NOTHING,      // $
-    T_OPEN_B,       // <
-    T_EQUAL,        // =
+    StackProcess = 1,
+    Finish,
+    StackPush,
+    LR_Brackets,
+    ERROR,
 } Rel_Type;
 
 Term_Type Get_Term(Token_Type Type);                    // Typ Terminalu Tokenu

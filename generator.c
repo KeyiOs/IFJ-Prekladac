@@ -1,5 +1,5 @@
 /**
- * IFJ Projekt 2021
+ * IFJ Projekt 2022
  * @author <xhorac20> Andrej Horacek
  */
 
@@ -10,18 +10,14 @@
 
 #include "generator.h"
 
-unsigned int ID = 0;
-unsigned int elseCounter = 0;
-
-int IntStack[1000];
+int IntStack[256];
 int top = -1;
 
 // _________________________________________Pomocne Funckie_____________________________________________________________
 
-void my_push() {
+void my_push(int ID) {
     top = top + 1;
     IntStack[top] = ID;
-    ID++;
 }
 
 void my_pop() {
@@ -74,10 +70,11 @@ void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
         case T_TYPE_FLOAT_DATATYPE:
             printf("PUSHS float@%a\n", atof(local_st->Token.String)); // TODO:
             break;
-        case T_TYPE_VARIABLE:
+        case T_TYPE_VARIABLE:{
             _ITEMV_ *ItemV = SearchV(&Table->Local, local_st->Token.String);
             printf("PUSHS LF@%s$%d\n", local_st->Token.String, ItemV->Dive);
             break;
+        }
         case T_TYPE_STRING_DATATYPE:
             printf("PUSHS string@%s\n", local_st->Token.String); // TODO:
             break;
@@ -129,6 +126,47 @@ void G_Param(_PARAM_ *param) {
     printf("DEFVAR LF@retval$1\n");
 }
 
+void G_IfGen(int ID) {
+    printf("#IF $if$%d\n", ID);
+}
+
+void G_IfStart(int ID) {
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS $if$%d$else$\n", ID);
+    my_push(ID);
+}
+
+void G_Else() {
+    printf("JUMP $if$%d$end\n", IntStack[top]);
+    printf("LABEL $if$%d$else$\n", IntStack[top]);
+}
+
+void G_IfEnd() {
+    printf("LABEL $if$%d$end\n", IntStack[top]);
+    my_pop();
+}
+
+void G_WhileStart(int ID) {
+    printf("LABEL WHILE$CHECK$%d\n", ID);
+}
+
+void G_WhileJump(int ID) {
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS WHILE$END$%d\n", ID);
+    my_push(ID);
+}
+
+void G_WhileEnd() {
+    printf("JUMP WHILE$CHECK$%d\n", IntStack[top]);
+    printf("LABEL WHILE$END$%d\n", IntStack[top]);
+    my_pop();
+}
+
+void G_Return(){
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+}
+
 /* void G_DefVar(char *Name, int Dive, bool in_for) {
     if (in_for) printf("MOVE LF@%s$%d nil@nil\n", Name, Dive);
     else printf("DEFVAR LF@%s$%d\n", Name, Dive);
@@ -171,102 +209,6 @@ void G_Param(_PARAM_ *param) {
         DeleteFirstString(&Vars);
         my_pop();
     }
-} */
-
-/* void G_Initialization(int NumberOfVariables, bool in_for) {
-    int tmp_top;
-    if (NumberOfVariables <= 0)
-        return;
-    printf("CREATEFRAME\n");
-    for (int j = 0; j < NumberOfVariables; j++) {
-        printf("%s", Exps.First->data);
-        DeleteFirstString(&Exps);
-        printf("DEFVAR TF@$tmp$%d\n", ID);
-        printf("POPS TF@$tmp$%d\n", ID);
-        my_push();
-    }
-    tmp_top = top - NumberOfVariables + 1;
-    for (int i = 0; i < NumberOfVariables; i++) {
-        if (strcmp(Vars.First->data, "_") == 0) {
-            DeleteFirstString(&Vars);
-            continue;
-        }
-        printf("MOVE LF@%s TF@$tmp$%d\n", Vars.First->data, IntStack[in_for ? tmp_top++ : top]);
-        DeleteFirstString(&Vars);
-        my_pop();
-    }
-
-} */
-
-/* void G_AssReturn(int NumberOfVariables) {
-    for (int i = NumberOfVariables; i > 0; i--) {
-        if (strcmp(Vars.First->data, "_") == 0) {
-            DeleteFirstString(&Vars);
-            continue;
-        }
-        printf("MOVE LF@%s TF@retval$%i\n", Vars.First->data, i);
-        DeleteFirstString(&Vars);
-    }
-} */
-
-/* void G_SetReturnVal(int NumberOfReturns, bool in_for) {
-
-    if (!in_for) {
-        for (int i = 1; i <= NumberOfReturns; i++) {
-            printf("%s", Exps.First->data);
-            DeleteFirstString(&Exps);
-            printf("POPS LF@retval$%i\n", i);
-        }
-    } else {
-        for (int i = NumberOfReturns; i >= 1; i--) {
-            printf("%s", Exps.First->data);
-            DeleteFirstString(&Exps);
-            printf("POPS LF@retval$%i\n", i);
-        }
-    }
-} */
-
-/* void G_ForStart(char *expression) {
-    printf("LABEL CHECK$FOR$%d\n", ID);
-    printf("%s", expression);
-    G_ForJump();
-} */
-
-/* void G_ForJump() {
-    printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS END$FOR$%d\n", ID);
-    my_push();
-} */
-
-/* void G_ForEnd() {
-    StringElementPtr tmp = Vars.First;
-    int count = 0;
-    while (tmp != NULL) {
-        tmp = tmp->ptr;
-        count++;
-    }
-    printf("JUMP CHECK$FOR$%d\n", IntStack[top]);
-    printf("LABEL END$FOR$%d\n", IntStack[top]);
-    my_pop();
-} */
-
-/* void G_IfStart(char *expression) {
-    printf("#IF $if$%d\n", ID);
-    printf("%s", expression);
-    printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS $if$%d$else$%d\n", ID, elseCounter);
-    my_push();
-} */
-
-/* void G_Else() {
-    printf("JUMP $if$%d$end\n", IntStack[top]);
-    printf("LABEL $if$%d$else$%d\n", IntStack[top], elseCounter);
-} */
-
-/* void G_IfEnd() {
-    printf("LABEL $if$%d$end\n", IntStack[top]);
-    my_pop();
-    elseCounter = 0;
 } */
 
 // _________________________________________Vstavane funkcie IFJ22______________________________________________________
@@ -356,7 +298,7 @@ void G_write() {
     printf("DEFVAR LF@type$var\n");
 
     printf("LABEL $while$write\n");                              // Cyklus START
-    printf("JUMPIFEQ while$end LF@$0 int@0\n");                  // LF@$0 = 0 then jump
+    printf("JUMPIFEQ while$end TF@write$0 int@0\n");             // TF@write$0 = 0 then jump
     printf("POPS LF@write$var\n");
     printf("TYPE LF@type$var LF@write$var\n");
 
@@ -366,14 +308,14 @@ void G_write() {
 
     printf("LABEL $write$ \n");                                 //  WRITE
     printf("WRITE LF@write$var\n");
-    printf("SUB LF@$0 LF@$0 int@1\n");
+    printf("SUB TF@write$0 TF@write$0 int@1\n");
     printf("JUMP $while$write\n");                              // Cyklus END
 
-    printf("LABEL $write$int\n");       //TODO int bude vytištěna pomocí '%d'
+    printf("LABEL $write$int\n");       // TODO: int bude vytištěna pomocí '%d'
     printf("MOVE LF@write$var LF@write$var\n");
     printf("JUMP $write$\n");
 
-    printf("LABEL $write$float\n");     //TODO float pak pomocí '%a'
+    printf("LABEL $write$float\n");     // TODO float pak pomocí '%a'
     printf("MOVE LF@write$var LF@write$var\n");
     printf("JUMP $write$\n");
 
@@ -438,7 +380,7 @@ void G_intval() {
     printf("RETURN\n");
 
     printf("LABEL $intval$null\n");
-    printf("MOVE LF@retval$1 float@0.0\n");
+    printf("MOVE LF@retval$1 float@0x0.0p+0\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }

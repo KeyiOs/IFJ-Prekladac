@@ -382,7 +382,7 @@ int Function(_WRAP_ *Wrap){
             if(ItemTMP == NULL) return 5;                                   //
             if((T_TYPE_STRING_DATATYPE > ItemTMP->Type || ItemTMP->Type > T_TYPE_INT_DATATYPE) &&
                 ItemTMP->Type != T_TYPE_VARIABLE) return 4;                 //
-            if(Params->Type - 16 != ItemTMP->Type && Params->Type != T_TYPE_VARIABLE) return 4;
+            if(Params->Type - 16 != ItemTMP->Type && ItemTMP->Type != T_TYPE_VARIABLE) return 4;    // !FIX ERROR
         } else if(Params->Type - 16 != Token->Type) return 4;               //
         G_Stack_Push(Wrap->Stack, Token);                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Ciarka/Zatvorka
@@ -413,7 +413,19 @@ int Variable(_WRAP_ *Wrap){
 
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Rovna sa
     if(Token->Type != T_TYPE_EQUAL) {                                       //
-        // TODO: Token back                                                 // TODO:
+        int Len = -2;                                                       //
+        if(Token->Type == T_TYPE_TRIPLE_EQUALS_NEG || Token->Type == T_TYPE_TRIPLE_EQUALS) Len = -4;
+        else if(Token->Type == T_TYPE_SMALLER_EQUAL || Token->Type == T_TYPE_GREATER_EQUAL) Len = -3;
+        fseek(Wrap->Source, Len, SEEK_CUR);                                 //
+        Wrap->Character = getc(Wrap->Source);                               //
+        while(Wrap->Character == ' ' || Wrap->Character == 10 || Wrap->Character == 13) {
+            fseek(Wrap->Source, -2, SEEK_CUR);                              //
+            Wrap->Character = getc(Wrap->Source);                           //
+        }                                                                   //
+        Len = -1 * strlen(Name);                                            //
+        fseek(Wrap->Source, Len-1, SEEK_CUR);                               //
+
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             //
         Expression(Wrap, 0);                                                // Analyzator
     } else {                                                                //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             //
@@ -436,7 +448,7 @@ int Variable(_WRAP_ *Wrap){
     }                                                                       //
     if(Token->Type != T_TYPE_SEMICOLON) return 2;                           //
     InsertV(&Wrap->Table->Local, Name, Type);                               // Vlozenie do Tabulky
-    
+
     return 0;
 }
 
@@ -503,12 +515,16 @@ int main(){
     }                                                                       //
     Wrap->Character = 0;                                                    //
     Wrap->Dive = 0;                                                         //
-    
+
     Wrap->Source;                                                           // Vstup
     if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;     //
-
+    //Wrap->Source = stdin;
+    
     int ERR = Prolog(Wrap);                                                 // Prolog
-    if(ERR != 0) return ERR;                                                //
+    if(ERR != 0) {                                                          //
+        ERR_Handler(ERR, Line);                                             //
+        return ERR;                                                         //
+    }                                                                       //
 
     G_BigStart();                                                           // Zaciatok Generatora
     if((ERR = Start(Wrap)) != 0) {                                          // Zaciatok Analyzi
