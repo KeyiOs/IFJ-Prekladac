@@ -9,6 +9,7 @@
 #include "symtable.h"
 #include "generator.h"
 #include "stack.h"
+#include "analyzator.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -99,6 +100,7 @@ int Keyword(_WRAP_ *Wrap){
     FILE* Source = Wrap->Source;                                            //
     int Character = Wrap->Character;                                        //
     int Dive = Wrap->Dive;                                                  //
+
     if(Token->Keyword == T_KEYWORD_FUNCTION && Dive == 0) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Meno Funkcie
         if(Token->Type != T_TYPE_FUNCTION) return 2;                        //
@@ -111,40 +113,41 @@ int Keyword(_WRAP_ *Wrap){
         Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
         Wrap_TMP.Table = SearchF(&Table, Name);                             //
         if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
-        //EditVariable((_ITEMV_ **)Wrap->Table->Local, Wrap->Dive);         //
+        G_Return();                                                         //
     } else if(Token->Keyword == T_KEYWORD_RETURN && Dive != 0) {
-        // TODO: Analyza vyrazov                                            // TODO: Odstranit
-        while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
-        }                                                                   // TODO: Odstranit
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             //
+        if(Token->Type == T_TYPE_FUNCTION);                                 // TODO: Opytat sa na Funkciu
+        else Expression(Wrap, 0);                                           // Analyzator
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       // Bodkociarka
+        G_Return();                                                         //
     } else if(Token->Keyword == T_KEYWORD_WHILE) {
+        G_WhileStart(Wrap->Dive);                                           //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        // TODO: Analyza vyrazov                                            // TODO: Odstranit
-        while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // TODO: Odstranit
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
-        }                                                                   // TODO: Odstranit
+        Expression(Wrap, 1);                                                // Analyzator
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
+        G_WhileJump(Wrap->Dive);                                            //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         _WRAP_ Wrap_TMP = *Wrap;                                            //
         Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
         if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
+        G_WhileEnd();                                                       //
     } else if(Token->Keyword == T_KEYWORD_ELSE) {
+        G_Else();                                                           //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         _WRAP_ Wrap_TMP = *Wrap;                                            //
         Wrap_TMP.Dive = Wrap->Dive + 1;                                     //
         if((ERR = Start(&Wrap_TMP)) != 0) return ERR;                       //
+        G_IfEnd();                                                          //
     } else if(Token->Keyword == T_KEYWORD_IF) {
+        G_IfGen(Wrap->Dive);                                                //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        // TODO: Analyza vyrazov                                            // TODO: Odstranit
-        while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // TODO: Odstranit
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
-        }                                                                   // TODO: Odstranit
+        Expression(Wrap, 1);                                                // Analyzator
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
+        G_IfStart(Wrap->Dive);                                              //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         _WRAP_ Wrap_TMP = *Wrap;                                            //
@@ -242,6 +245,7 @@ int Keyword(_WRAP_ *Wrap){
             G_Call("ord");                                                  //
         }
     } else if(Token->Keyword == T_KEYWORD_WRITE) {
+        int Cnt = 0;                                                        //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // Zatvorena Zatvorka
@@ -259,10 +263,11 @@ int Keyword(_WRAP_ *Wrap){
             if((ERR = Scan(Wrap)) != 0) return ERR;                         // Ciarka
             if(Token->Type != T_TYPE_COMMA &&                               //
                Token->Type != T_TYPE_CLOSED_BRACKET) return 2;              //
+            Cnt++;                                                          //
         }                                                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        G_CallStart("write", 0);                                            //
+        G_CallStart("write", Cnt);                                          //
         G_CallParam(Wrap->Stack, Wrap->Table);                              //
         G_Call("write");                                                    //
     } else if(Token->Keyword == T_KEYWORD_READS ||
@@ -306,7 +311,7 @@ int Keyword(_WRAP_ *Wrap){
         G_CallStart("chr", 0);                                              //
         G_CallParam(Wrap->Stack, Wrap->Table);                              //
         G_Call("chr");                                                      //
-    } else return 2;
+    } else return 2;                                                        //
 
     return 0;
 }
@@ -347,6 +352,7 @@ int F_Declare(_WRAP_ *Wrap){
        Token->Keyword != T_KEYWORD_FLOAT &&                                 //
        Token->Keyword != T_KEYWORD_INT) return 2;                           //
     if((ERR = ReturnF(&Wrap->Table, Name, Wrap->Token->Keyword)) != 0) return 99;
+
     return 0;
 }
 
@@ -363,9 +369,6 @@ int Function(_WRAP_ *Wrap){
     if(FunctionTMP == NULL) return 3;                                       //
     _PARAM_ *Params = FunctionTMP->Params;                                  //
 
-    InsertV(&Wrap->Table->Local, "a", T_TYPE_INT_DATATYPE);                 // !Odstranit
-    InsertV(&Wrap->Table->Local, "b", T_TYPE_INT_DATATYPE);                 // !Odstranit
-
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Otovrena Zatvorka
     if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                        //
     while(Params) {                                                         // Pokial su tokeny
@@ -377,8 +380,9 @@ int Function(_WRAP_ *Wrap){
             if(Token->Type != T_TYPE_VARIABLE) return 2;                    // Premenna
             _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);       //
             if(ItemTMP == NULL) return 5;                                   //
-            if(1 > ItemTMP->Type || ItemTMP->Type > 4) return 4;            //
-            if(Params->Type - 16 != ItemTMP->Type) return 4;                //
+            if((T_TYPE_STRING_DATATYPE > ItemTMP->Type || ItemTMP->Type > T_TYPE_INT_DATATYPE) &&
+                ItemTMP->Type != T_TYPE_VARIABLE) return 4;                 //
+            if(Params->Type - 16 != ItemTMP->Type && Params->Type != T_TYPE_VARIABLE) return 4;
         } else if(Params->Type - 16 != Token->Type) return 4;               //
         G_Stack_Push(Wrap->Stack, Token);                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Ciarka/Zatvorka
@@ -402,23 +406,36 @@ int Function(_WRAP_ *Wrap){
  *  • Overenie/Deklaracia v Tabulke
  */
 int Variable(_WRAP_ *Wrap){
-    int ERR;
-    _TOKEN_ *Token = Wrap->Token;
+    int ERR;                                                                // Deklaracia
+    _TOKEN_ *Token = Wrap->Token;                                           //
+    char *Name = Token->String;                                             //
+    Token_Type Type = Token->Type;                                          //
 
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Rovna sa
     if(Token->Type != T_TYPE_EQUAL) {                                       //
-        // TODO: Analyza vyrazov + Pridat uz nacitanu premennu              // TODO: Odstranit
-        while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
-        }                                                                   // TODO: Odstranit
+        // TODO: Token back                                                 // TODO:
+        Expression(Wrap, 0);                                                // Analyzator
     } else {                                                                //
-        // TODO: Analyza vyrazov                                            // TODO: Odstranit
-        while(Token->Type != T_TYPE_SEMICOLON) {                            // TODO: Odstranit
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         // TODO: Odstranit
-        }                                                                   // TODO: Odstranit
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             //
+        if(Token->Type == T_TYPE_KEYWORD) {                                 // TODO: Opytat sa na Keywords
+            if(Token->Keyword == T_KEYWORD_CHR ||                           //
+               Token->Keyword == T_KEYWORD_STRVAL ||                        //
+               Token->Keyword == T_KEYWORD_READS) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE);
+            else if(Token->Keyword == T_KEYWORD_INTVAL ||                   //
+                    Token->Keyword == T_KEYWORD_ORD ||                      //
+                    Token->Keyword == T_KEYWORD_READI ||                    //
+                    Token->Keyword == T_KEYWORD_STRLEN) InsertV(&Wrap->Table->Local, Name, T_TYPE_INT_DATATYPE);
+            else if(Token->Keyword == T_KEYWORD_READF ||                    //
+                    Token->Keyword == T_KEYWORD_FLOATVAL) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE);
+            else return 2;                                                  //
+
+            if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
+            return 0;                                                       //
+        } else if(Token->Type == T_TYPE_FUNCTION) Function(Wrap);           //
+        else Expression(Wrap, 0);                                           // Analyzator // TODO: Generovanie
     }                                                                       //
     if(Token->Type != T_TYPE_SEMICOLON) return 2;                           //
-    // TODO: Symtable Add                                                   //
+    InsertV(&Wrap->Table->Local, Name, Type);                               // Vlozenie do Tabulky
     
     return 0;
 }
@@ -427,30 +444,32 @@ int Variable(_WRAP_ *Wrap){
  *  Vyhodnotenie zaciatocneho tokenu
  */
 int Start(_WRAP_ *Wrap){
-    int ERR;
-    int IF = 0;
-    _TOKEN_ *Token = Wrap->Token;
+    int ERR;                                                                // Deklaracia
+    int IF = 0;                                                             //
+    _TOKEN_ *Token = Wrap->Token;                                           //
 
-    while(Token->Type != T_TYPE_EOF) {
-        if((ERR = Scan(Wrap)) != 0) return ERR;
+    while(Token->Type != T_TYPE_EOF) {                                      // Spracuje Zaciatocne Tokeny
+        if((ERR = Scan(Wrap)) != 0) return ERR;                             //
 
-        if(IF == 1 && Token->Keyword != T_KEYWORD_IF) IF = 0;
-        else if(IF == 0 && Token->Keyword == T_KEYWORD_IF) IF = 1;
-        else if(IF == 0 && Token->Keyword == T_KEYWORD_ELSE) return 2;
+        if(IF == 1 && Token->Keyword != T_KEYWORD_IF) IF = 0;               // Overenie IF
+        else if(IF == 0 && Token->Keyword == T_KEYWORD_IF) IF = 1;          //
+        else if(IF == 0 && Token->Keyword == T_KEYWORD_ELSE) return 2;      //
         
-        if(Token->Type == T_TYPE_KEYWORD) {
-            if((ERR = Keyword(Wrap)) != 0) return ERR;
-        } else if(Token->Type == T_TYPE_FUNCTION) {
-            if((ERR = Function(Wrap)) != 0) return ERR;
-        } else if(Token->Type == T_TYPE_VARIABLE) {
-            if((ERR = Variable(Wrap)) != 0) return ERR;
-        } else if(Term(Token->Type) == 0);                                  // TODO: Analyza vyrazov
+        if(Token->Type == T_TYPE_KEYWORD) {                                 // Keywordy
+            if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
+        } else if(Token->Type == T_TYPE_FUNCTION) {                         // Volanie Funkcie
+            if((ERR = Function(Wrap)) != 0) return ERR;                     //
+        } else if(Token->Type == T_TYPE_VARIABLE) {                         // Premenna
+            if((ERR = Variable(Wrap)) != 0) return ERR;                     //
+        } else if(Term(Token->Type) == 0) {                                 // Vyraz
+            if((ERR = Expression(Wrap, 1)) != 0) return ERR;                //
+        }                                                                   //
         else if(Token->Type != T_TYPE_SEMICOLON && Token->Type != T_TYPE_EOF) {
-            if(Token->Type != T_TYPE_CLOSED_CURLY_BRACKET) return 2;
-            if(Wrap->Dive == 0) return 2;
-            else return 0;
-        }
-    }
+            if(Token->Type != T_TYPE_CLOSED_CURLY_BRACKET) return 2;        // Ukoncenie Vnorenia
+            if(Wrap->Dive == 0) return 2;                                   // Overenie Vnorenia
+            else return 0;                                                  //
+        }                                                                   //
+    }                                                                       //
 
     if(Wrap->Dive != 0) return 2;
 
