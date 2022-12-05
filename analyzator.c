@@ -126,6 +126,16 @@ int Expression(_WRAP_ *Wrap, int Condition) {
 
         if(Get_Term(Stack->Token.Type) != T_VAL && T_TypeNew != T_VAL && T_TypeNew != T_LB) return 2; //nebere výrazy 5 +- 10...
         
+        if(Wrap->Token->Type == T_TYPE_NULL_DATATYPE && Condition == 0) return 2;                               // vraci pokud je x = null treba
+
+        if(Stack->Token.Type == T_TYPE_STRING_DATATYPE && Wrap->Token->Type != T_TYPE_CONCATENATION) return 2;  // stringy - vraci pokud je string a neni .
+        if(Stack->Token.Type == T_TYPE_CONCATENATION && Wrap->Token->Type != T_TYPE_STRING_DATATYPE
+            && Wrap->Token->Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je konkatenace ale dalsi ne str / promenna
+        if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Stack->Token.Type != T_TYPE_CONCATENATION
+            && Stack->Token.Type != T_TYPE_NULL) return 2;                                                      // vraci pokud string ale predesla neni . nebo neni 1.
+        if(Wrap->Token->Type == T_TYPE_CONCATENATION && Stack->Token.Type != T_TYPE_STRING_DATATYPE
+            && Stack->Token.Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je . ale predesle neni str / promenna
+        
         if(T_TypeNew == T_VAL && Wrap->Token->Type != T_TYPE_VARIABLE){
             if(Wrap->Token->Type == T_TYPE_INT_DATATYPE && (Type == T_TYPE_INT_DATATYPE || Type == 0)){
                     Type = T_TYPE_INT_DATATYPE;
