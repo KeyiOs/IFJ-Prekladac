@@ -129,14 +129,22 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Return < 300) Return = 300;
         }
         
-        if(Stack->Token.Type == T_TYPE_STRING_DATATYPE && Wrap->Token->Type != T_TYPE_CONCATENATION) return 2;  // stringy - vraci pokud je string a neni .
-        else if(Stack->Token.Type == T_TYPE_CONCATENATION && Wrap->Token->Type != T_TYPE_STRING_DATATYPE
-            && Wrap->Token->Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je konkatenace ale dalsi ne str / promenna
-        else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Stack->Token.Type != T_TYPE_CONCATENATION
-            && Stack->Token.Type != T_TYPE_NULL) return 2;                                                      // vraci pokud string ale predesla neni . nebo neni 1.
-        else if(Wrap->Token->Type == T_TYPE_CONCATENATION && Stack->Token.Type != T_TYPE_STRING_DATATYPE
-            && Stack->Token.Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je . ale predesle neni str / promenna
-
+        if(Condition == 0){
+            if(Stack->Token.Type == T_TYPE_STRING_DATATYPE && Wrap->Token->Type != T_TYPE_CONCATENATION) return 2;  // stringy - vraci pokud je string a neni .
+            else if(Stack->Token.Type == T_TYPE_CONCATENATION && Wrap->Token->Type != T_TYPE_STRING_DATATYPE
+                && Wrap->Token->Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je konkatenace ale dalsi ne str / promenna
+            else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Stack->Token.Type != T_TYPE_CONCATENATION
+                && Stack->Token.Type != T_TYPE_NULL) return 2;                                                      // vraci pokud string ale predesla neni . nebo neni 1.
+            else if(Wrap->Token->Type == T_TYPE_CONCATENATION && Stack->Token.Type != T_TYPE_STRING_DATATYPE
+                && Stack->Token.Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je . ale predesle neni str / promenna
+        }
+        else if(Condition == 1 && Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Stack->Token.Type != T_TYPE_OPEN_BRACKET){// funkce do ktere prijde string
+            if(T_TypeStack != T_SMGR && T_TypeStack != T_EQ) return 2                                                      // vraci pokud je string a neni <,>,=...
+            else if(Stack->Previous->Token.Type != T_TYPE_STRING_DATATYPE) return 2;                                       // vraci pokud je string ale pred terminalem neni string
+        }
+        else if(Condition == 1 && (Get_Token(Stack->Token.Type) == T_SMGREQ || Get_Token(Stack->Token.Type) == T_TEQNTEQ)){     // na stacku je ===,<,...
+            if(Stack->Previous->Token.Type == T_TYPE_STRING_DATATYPE && Wrap->Token->Type != T_TYPE_STRING_DATATYPE) return 2;  // vraci pokud pred je str a za nim neni
+        }
         switch(Relation(T_TypeStack, T_TypeNew)){   // Switch relaci mezi terminaly
             case StackPush:
                 Stack_Push(Stack, Wrap->Token);
