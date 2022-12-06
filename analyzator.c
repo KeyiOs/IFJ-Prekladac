@@ -128,6 +128,14 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             else if(Wrap->Token->Type == T_TYPE_FLOAT_DATATYPE && Return < 200) Return = 200;
             else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Return < 300) Return = 300;
         }
+        
+        if(Stack->Token.Type == T_TYPE_STRING_DATATYPE && Wrap->Token->Type != T_TYPE_CONCATENATION) return 2;  // stringy - vraci pokud je string a neni .
+        else if(Stack->Token.Type == T_TYPE_CONCATENATION && Wrap->Token->Type != T_TYPE_STRING_DATATYPE
+            && Wrap->Token->Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je konkatenace ale dalsi ne str / promenna
+        else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE && Stack->Token.Type != T_TYPE_CONCATENATION
+            && Stack->Token.Type != T_TYPE_NULL) return 2;                                                      // vraci pokud string ale predesla neni . nebo neni 1.
+        else if(Wrap->Token->Type == T_TYPE_CONCATENATION && Stack->Token.Type != T_TYPE_STRING_DATATYPE
+            && Stack->Token.Type != T_TYPE_VARIABLE) return 2;                                                  // vraci pokud je . ale predesle neni str / promenna
 
         switch(Relation(T_TypeStack, T_TypeNew)){   // Switch relaci mezi terminaly
             case StackPush:
