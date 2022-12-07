@@ -210,12 +210,12 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             case Finish:
                 if(StackTerminal == T_DOLLAR && CurrentT_Type == T_DOLLAR){
                     if(strcmp(Stack->Token.String, "$") != 0){
-                        if(Stack->Token.Type == T_TYPE_INT_DATATYPE) printf("PUSHS int$%s\n", Stack->Token.String);
-                        else if(Stack->Token.Type == T_TYPE_FLOAT_DATATYPE) printf("PUSHS float$%s\n", Stack->Token.String);
-                        else if(Stack->Token.Type == T_TYPE_STRING_DATATYPE) printf("PUSHS string$%s\n", Stack->Token.String);
+                        if(Stack->Token.Type == T_TYPE_INT_DATATYPE) printf("PUSHS int@%s\n", Stack->Token.String);
+                        else if(Stack->Token.Type == T_TYPE_FLOAT_DATATYPE) printf("PUSHS float@%s\n", Stack->Token.String);
+                        else if(Stack->Token.Type == T_TYPE_STRING_DATATYPE) printf("PUSHS string@%s\n", Stack->Token.String);
                         else if(Stack->Token.Type == T_TYPE_VARIABLE){
                             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Stack->Token.String);
-                            printf("PUSHS LF$%s$%i\n", Stack->Token.String, TMP->Dive);
+                            printf("PUSHS LF@%s$%i\n", Stack->Token.String, TMP->Dive);
                         }
                     }
                     if(Stack->Token.Type == T_TYPE_NULL && Brackets == 0) return Return;        // Spravne se doslo az na konec vyrazu

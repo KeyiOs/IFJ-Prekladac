@@ -52,9 +52,9 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     } else if(Wrap->Character == 't'){
                         StringNew[Length] = '0';
                         Length++;
-                        StringNew[Length] = '1';
-                        Length++;
                         StringNew[Length] = '0';
+                        Length++;
+                        StringNew[Length] = '9';
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
