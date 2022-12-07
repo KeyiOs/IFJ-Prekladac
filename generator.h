@@ -1,6 +1,6 @@
 /**
  * IFJ Projekt 2022
- * @author <xhorac20> Andrej Horacek
+ * @author <xhorac20> Andrej Horacek, <xkento00> Samuel Kentos
  */
 
 #include "parser.h"
@@ -32,7 +32,7 @@ void G_BigEnd();
 /// Generovanie parametrov a ich inicializacia
 /// @param last - pointer na strukturu token
 /// @param local_st - pointer na strukturu zasobnik
-void G_CallParam(_STACK_ *local_st, _ITEMF_ *Table);
+_STACK_ *G_CallParam(_STACK_ *local_st, _ITEMF_ *Table);
 
 /// Generovanie instrukcie na vlozenie hodnoty do zasobniku
 /// @param type typ tokrnu
@@ -92,14 +92,14 @@ void G_WhileEnd();
 /// Generovanie RETURN
 void G_Return();
 
-
-
-
-/// Generovanie premennej
-/// @param id - id premennej
-/// @param scope - rozsah
-/// @param in_for - True ak je vo for
-void G_DefVar(char *Name, int Dive, bool in_for);
+void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_CON(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2);
 
 /// Generuje meno premennej ktore vlozi na 1. miesto v _STACK_ Vars
 /// @param var_name - meno premennej

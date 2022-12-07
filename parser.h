@@ -1,6 +1,6 @@
 /**
  * IFJ Projekt 2022
- * @author <xkento00> Samuel Kentoš
+ * @author <xkento00> Samuel Kentos
  */
 #include <stdlib.h>
 #include <stdio.h>

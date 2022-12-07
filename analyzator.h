@@ -9,6 +9,8 @@
 #include "parser.h"
 #include "skener.h"
 #include "symtable.h"
+#include "stack.h"
+#include "generator.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,7 +23,7 @@ typedef enum {
     T_ADDSUBCON = 1,// + | - | .
     T_DIVMUL,       // * | /
     T_EQ,           // === | !==
-    T_SMGR,         // < | > | <= | >=
+    T_SMGT,         // < | > | <= | >=
     T_LB,           // (
     T_RB,           // )
     T_VAL,          // promenná
@@ -37,7 +39,7 @@ typedef enum {
     ERROR,
 } Rel_Type;
 
-Term_Type Get_Term(Token_Type Type);                    // Typ Terminalu Tokenu
+Term_Type Get_Precedence(Token_Type Type);              // Uroven precedencie Tokenu
 Rel_Type Relation(Term_Type stack, Term_Type entry);    // Urcuje vztah medzi tokenmi
 Term_Type Get_Terminal(_STACK_ *Stack);                 // Najdenie terminalu na staku
 int Expression(_WRAP_ *Wrap, int Condition);            // Hlavna Funkcia Analyzi

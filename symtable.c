@@ -48,11 +48,12 @@ int InsertV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type) {
     if (Item == NULL) {
         if(((*ItemPtr) = InitV(Name, Type)) == NULL) return 99;
         else return 0;
-    } else if (strcmp(Name, Item->Name) < 0){
-        return InsertV(&(Item->Left), Name, Type);
-    } else if (strcmp(Name, Item->Name) > 0){
-        return InsertV(&(Item->Right), Name, Type);
-    } else return 1;
+    }
+    int CMP = strcmp(Name, Item->Name);
+    if(CMP == 0) (*ItemPtr)->Type = Type;
+    else if (CMP < 0) return InsertV(&(Item->Left), Name, Type);
+    else if (CMP > 0) return InsertV(&(Item->Right), Name, Type);
+    else return 1;
 }
 
 // Vrat premennu, ak nenajde vytvori novu
@@ -63,11 +64,12 @@ _ITEMV_ *GetV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type) {
         else return (*ItemPtr);
     }
 
-    if(!strcmp(Name, Item->Name)) {
+    int CMP = strcmp(Name, Item->Name);
+    if(CMP == 0) {
         return Item;
-    } else if (strcmp(Name, Item->Name) < 0) {
+    } else if (CMP < 0) {
         return GetV((&Item->Left), Name, Type);
-    } else if (strcmp(Name, Item->Name) > 0) {
+    } else if (CMP > 0) {
         return GetV(&(Item->Right), Name, Type);
     } else return NULL;
 }
@@ -91,11 +93,11 @@ _ITEMV_ *SearchV(_ITEMV_ **ItemPtr, char *Name) {
 _ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name){
     _ITEMV_ *Item = *ItemPtr;
     if(Item == NULL) return Item;
-    if (strcmp(Name, Item->Name) < 0){
+    int CMP = strcmp(Name, Item->Name);
+    if (CMP < 0){
         Item->Left = DeleteV((&Item->Left), Name);
         return Item;
-    }
-    else if (strcmp(Name, Item->Name) > 0){
+    } else if (CMP > 0){
         Item->Right = DeleteV(&(Item->Right), Name);
         return Item;
     } else {        // Ak ma jedneho naslednika alebo ziadneho
@@ -232,7 +234,8 @@ _ITEMF_ *InitF(_ITEMF_ **Root, _ITEMF_ **ItemPtr, char *Name) {
         Item->Local = NULL;
         Item->Params = NULL;
         Item->Type = T_KEYWORD_EMPTY;
-        Item->Root = Item;
+        if(!strcmp(Name, "main")) Item->Root = Item;
+        else Item->Root = *Root;
         Item->Left = NULL;
         Item->Right = NULL;
     } else return NULL;
@@ -245,9 +248,11 @@ int InsertF(_ITEMF_ **Root, _ITEMF_ **ItemPtr, char *Name) {
     if (Item == NULL) {
         if(((*ItemPtr) = InitF(Root, ItemPtr, Name)) == NULL) return 99;
         return 0;
-    } else if (strcmp(Name, Item->Name) < 0){
+    }
+    int CMP = strcmp(Name, Item->Name);
+    if (CMP < 0){
         return InsertF(Root, &(Item->Left), Name);
-    } else if (strcmp(Name, Item->Name) > 0){
+    } else if (CMP > 0){
         return InsertF(Root, &(Item->Right), Name);
     } else return 1;
 }

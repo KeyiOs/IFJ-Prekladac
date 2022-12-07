@@ -1,6 +1,6 @@
 /**
  * IFJ Projekt 2022
- * @author <xhorac20> Andrej Horacek
+ * @authors <xhorac20> Andrej Horacek, <xkento00> Samuel Kentos
  */
 
 #include <stdio.h>
@@ -47,6 +47,7 @@ void G_BigStart() {
 
     printf("\n# main body\n");
     printf("LABEL $$main\n");
+    printf("DEFVAR LF@retval$1\n");
 }
 
 void G_BigEnd() {
@@ -54,21 +55,22 @@ void G_BigEnd() {
     printf("EXIT int@0\n");
 }
 
-void G_CallParam(_STACK_ *local_st, _ITEMF_ *Table) {
-    if (local_st == NULL) return;
+_STACK_ *G_CallParam(_STACK_ *local_st, _ITEMF_ *Table) {
+    if (local_st == NULL) return local_st;
     while (local_st->Token.Type != T_TYPE_NULL) {
         G_PushParams(local_st, Table);
         local_st = Stack_Pop(local_st);
     }
+    return local_st;
 }
 
 void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
     switch (local_st->Token.Type) {
         case T_TYPE_INT_DATATYPE:
-            printf("PUSHS int@%s\n", local_st->Token.String); // TODO:
+            printf("PUSHS int@%s\n", local_st->Token.String);
             break;
         case T_TYPE_FLOAT_DATATYPE:
-            printf("PUSHS float@%a\n", atof(local_st->Token.String)); // TODO:
+            printf("PUSHS float@%a\n", atof(local_st->Token.String));
             break;
         case T_TYPE_VARIABLE:{
             _ITEMV_ *ItemV = SearchV(&Table->Local, local_st->Token.String);
@@ -76,7 +78,7 @@ void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
             break;
         }
         case T_TYPE_STRING_DATATYPE:
-            printf("PUSHS string@%s\n", local_st->Token.String); // TODO:
+            printf("PUSHS string@%s\n", local_st->Token.String);
             break;
         default:
             break;
@@ -167,56 +169,509 @@ void G_Return(){
     printf("RETURN\n");
 }
 
-/* void G_DefVar(char *Name, int Dive, bool in_for) {
-    if (in_for) printf("MOVE LF@%s$%d nil@nil\n", Name, Dive);
-    else printf("DEFVAR LF@%s$%d\n", Name, Dive);
-} */
-
-/* void G_AddToVariable(char *var_name, int scope) {
-    char *tmp = malloc(strlen(var_name) + 1);
-    if (tmp == NULL) exit(99);
-    if (scope < 0) sprintf(tmp, "%s", var_name);
-    else sprintf(tmp, "%s$%i", var_name, scope);
-    InsertFirstString(&Vars, tmp);
-} */
-
-/* void G_AddToExponent(char *exp, bool in_for) {
-    char *tmp = malloc(strlen(exp) + 1);
-    strcpy(tmp, exp);
-    if (in_for)
-        InsertFirstString(&Exps, tmp);
-    else
-        InsertLastString(&Exps, tmp);
-} */
-
-/* void G_ForAss(int NumberOfVariables) {
-    if (NumberOfVariables <= 0)
-        return;
-    printf("CREATEFRAME\n");
-    for (int j = 0; j < NumberOfVariables; j++) {
-        printf("%s", Exps.First->data);
-        DeleteFirstString(&Exps);
-        printf("DEFVAR TF@$tmp$%d\n", ID);
-        printf("POPS TF@$tmp$%d\n", ID);
-        my_push();
-    }
-    for (int i = 0; i < NumberOfVariables; i++) {
-        if (strcmp(Vars.First->data, "_") == 0) {
-            DeleteFirstString(&Vars);
-            continue;
+void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("ADDS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
         }
-        printf("MOVE LF@%s TF@$tmp$%d\n", Vars.First->data, IntStack[top]);
-        DeleteFirstString(&Vars);
-        my_pop();
+        printf("ADDS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("ADDS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("ADDS\n");
     }
-} */
+}
+
+void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("SUBS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("SUBS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val2\n");
+        printf("SUBS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("SUBS\n");
+    }
+}
+
+void G_CON(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val1\n");
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        printf("POPS LF@Val1\n");
+        printf("CONCAT LF@Val1 LF@Val1 LF@Val2\n");
+        printf("PUSHS LF@Val1\n");
+    } else if (!strcmp(Val1.String, "$")) {
+        printf("DEFVAR LF@Val1\n");
+        printf("POPS LF@Val1\n");
+        if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("CONCAT LF@Val1 LF@Val1 string@%s\n", Val2.String);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("CONCAT LF@Val1 LF@Val1 LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val1\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("CONCAT LF@Val2 LF@Val1 string@%s\n", Val2.String);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("CONCAT LF@Val2 LF@Val1 LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val2\n");
+    } else {
+        printf("DEFVAR LF@Val1\n");
+        if(Type1 == T_TYPE_STRING_DATATYPE){
+            if(Type2 == T_TYPE_STRING_DATATYPE) printf("CONCAT LF@Val1 string@%s string@%s\n", Val1.String, Val2.String);
+            else{
+                _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+                printf("CONCAT LF@Val1 string@%s LF@%s$%i\n", Val1.String, Val2.String, TMP->Dive);
+            }
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            if(Type2 == T_TYPE_STRING_DATATYPE) printf("CONCAT LF@Val1 LF@%s$%i string@%s\n", Val1.String, TMP->Dive, Val2.String);
+            else{
+                _ITEMV_ *TMP2 = SearchV(&Wrap->Table->Local, Val2.String);
+                printf("CONCAT LF@Val1 LF@%s$%i LF@%s$%i\n", Val1.String, TMP->Dive, Val2.String, TMP2->Dive);
+            }
+        }
+        printf("PUSHS LF@Val1\n");
+    }
+}
+
+void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("MULS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("MULS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("MULS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("MULS\n");
+    }
+}
+
+void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("DIVS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("DIVS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val2\n");
+        printf("DIVS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("DIVS\n");
+    }
+}
+
+void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("EQS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("EQS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("EQS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("EQS\n");  
+    }
+    if (EQ == 0) {
+        printf("PUSHS bool@false\n");
+        printf("EQS\n");
+    }
+}
+
+void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("LTS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("LTS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val2\n");
+        printf("LTS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("LTS\n");  
+    }
+    if(SMEQ == 1){
+        printf("PUSHS bool@true\n");
+        printf("JUMPIFEQS sm$eq\n");
+        G_EQ(Wrap, 1, Val1, Val2);
+        printf("LABEL sm$eq\n");
+    }
+}
+
+void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
+    Token_Type Type1 = Val1.Type, Type2 = Val2.Type;
+    if (!strcmp(Val1.String, "$") && !strcmp(Val2.String, "$")) printf("GTS\n");
+    else if (!strcmp(Val1.String, "$")) {
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("GTS\n");
+    } else if (!strcmp(Val2.String, "$")) {
+        printf("DEFVAR LF@Val2\n");
+        printf("POPS LF@Val2\n");
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        printf("PUSHS LF@Val2\n");
+        printf("GTS\n");
+    } else {
+        if(Type1 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val1.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type1 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val1.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type1 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val1);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
+            printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
+        }
+        if(Type2 == T_TYPE_INT_DATATYPE){
+            int TMP = atoi(Val2.String);
+            printf("PUSHS int@%d\n", TMP);
+        } else if(Type2 == T_TYPE_FLOAT_DATATYPE){
+            float TMP = atof(Val2.String);
+            printf("PUSHS float@%a\n", TMP);
+        } else if(Type2 == T_TYPE_STRING_DATATYPE){
+            printf("PUSHS string@%d\n", Val2);
+        } else{
+            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
+            printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
+        }
+        printf("GTS\n");  
+    }
+    if(GTEQ == 1) {
+        printf("PUSHS bool@true\n");
+        printf("JUMPIFEQS gt$eq\n");
+        G_EQ(Wrap, 1, Val1, Val2);
+        printf("LABEL gt$eq\n");
+    }
+}
 
 // _________________________________________Vstavane funkcie IFJ22______________________________________________________
 
 void G_reads() {
     printf("#FUNCTION READS\n\n");
     printf("LABEL func$reads\n");
-    printf("PUSHFRAME\n");                           //  TF -> LF
+    printf("PUSHFRAME\n");                                  //  TF -> LF
 
     printf("DEFVAR LF@retval$1\n");                         //  LF@retval1
     printf("DEFVAR LF@param1\n");                           //  LF@param1
@@ -298,7 +753,7 @@ void G_write() {
     printf("DEFVAR LF@type$var\n");
 
     printf("LABEL $while$write\n");                              // Cyklus START
-    printf("JUMPIFEQ while$end TF@write$0 int@0\n");             // TF@write$0 = 0 then jump
+    printf("JUMPIFEQ while$end LF@write$0 int@0\n");             // LF@write$0 = 0 then jump
     printf("POPS LF@write$var\n");
     printf("TYPE LF@type$var LF@write$var\n");
 
@@ -306,16 +761,16 @@ void G_write() {
     printf("JUMPIFEQ $write$float string@float LF@type$var\n");
     printf("JUMPIFEQ $write$null string@nil LF@type$var\n");
 
-    printf("LABEL $write$ \n");                                 //  WRITE
+    printf("LABEL $write$\n");                                  //  WRITE
     printf("WRITE LF@write$var\n");
-    printf("SUB TF@write$0 TF@write$0 int@1\n");
+    printf("SUB LF@write$0 LF@write$0 int@1\n");
     printf("JUMP $while$write\n");                              // Cyklus END
 
-    printf("LABEL $write$int\n");       // TODO: int bude vytištěna pomocí '%d'
+    printf("LABEL $write$int\n");
     printf("MOVE LF@write$var LF@write$var\n");
     printf("JUMP $write$\n");
 
-    printf("LABEL $write$float\n");     // TODO float pak pomocí '%a'
+    printf("LABEL $write$float\n");
     printf("MOVE LF@write$var LF@write$var\n");
     printf("JUMP $write$\n");
 

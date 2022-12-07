@@ -1,6 +1,6 @@
 /**
  * IFJ Projekt 2022
- * @author <xkento00> Samuel Kentoš
+ * @author <xkento00> Samuel Kentos
  */
 
 #include "error_handler.h"
@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 extern int Line;
 extern int Token_Number;
@@ -441,18 +442,26 @@ int Scan(_WRAP_ *Wrap){
             break;
         case '0' ... '9': {   // Integer alebo float
             int Float = 0;
+            int Len = 0;
+            String = malloc(10);
+            if(String == NULL) return 99;
+            memset(String, '\0', 10);
             while((48 <= Wrap->Character && Wrap->Character <= 57) || Wrap->Character == '.'){
+                if(Len%10 == 0) {
+                    String = realloc(String, sizeof(String)+10);
+                    if(String == NULL) return 99;
+                    memset(String, '\0', sizeof(String));
+                }
+                String[Len] = Wrap->Character;
+                Len++;
                 if(Wrap->Character == '.'){
                     if(Float == 0) Float = 1;
                     else return 1;
                 }
                 Wrap->Character = getc(Wrap->Source);
             }
-            if(Float == 0){
-                Wrap->Token = T_Assign(Wrap->Token, T_TYPE_INT_DATATYPE, String, 0);
-                return 0;
-            }
-            Wrap->Token = T_Assign(Wrap->Token, T_TYPE_FLOAT_DATATYPE, String, 0);
+            if(Float == 0) Wrap->Token = T_Assign(Wrap->Token, T_TYPE_INT_DATATYPE, String, 0);
+            else Wrap->Token = T_Assign(Wrap->Token, T_TYPE_FLOAT_DATATYPE, String, 0);
             return 0;
             break;
         }
