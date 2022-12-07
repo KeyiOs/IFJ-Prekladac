@@ -32,6 +32,8 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                 }
                 if(Wrap->Character == '\\'){
+                    StringNew[Length] = '\';
+                    Length++;
                     Wrap->Character = getc(Wrap->Source);
                     if(Wrap->Character == '"' || Wrap->Character == '\\'){
                         StringNew[Length] = Wrap->Character;
@@ -39,7 +41,11 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                         Wrap->Character = getc(Wrap->Source);
                         continue;
                     } else if(Wrap->Character == 'n'){
-                        StringNew[Length] = 10;
+                        StringNew[Length] = '0';
+                        Length++;
+                        StringNew[Length] = '1';
+                        Length++;
+                        StringNew[Length] = '0';
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
@@ -124,9 +130,20 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                         Wrap->Character = getc(Wrap->Source);
                     }
                 }
-                StringNew[Length] = Wrap->Character;
-                Length++;
-                Wrap->Character = getc(Wrap->Source);
+                if(Wrap->Character == ' ') {
+                    StringNew[Length] = '\';
+                    Length++;
+                    StringNew[Length] = '0';
+                    Length++;
+                    StringNew[Length] = '3';
+                    Length++;
+                    StringNew[Length] = '2';
+                    Length++;
+                } else {
+                    StringNew[Length] = Wrap->Character;
+                    Length++;
+                    Wrap->Character = getc(Wrap->Source);
+                }
             }
             Wrap->Character = getc(Wrap->Source);
             break;
