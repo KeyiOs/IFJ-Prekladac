@@ -32,7 +32,7 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                 }
                 if(Wrap->Character == '\\'){
-                    StringNew[Length] = '\';
+                    StringNew[Length] = '\\';
                     Length++;
                     Wrap->Character = getc(Wrap->Source);
                     if(Wrap->Character == '"' || Wrap->Character == '\\'){
@@ -50,7 +50,11 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                         Wrap->Character = getc(Wrap->Source);
                         continue;
                     } else if(Wrap->Character == 't'){
-                        StringNew[Length] = 9;
+                        StringNew[Length] = '0';
+                        Length++;
+                        StringNew[Length] = '1';
+                        Length++;
+                        StringNew[Length] = '0';
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
@@ -131,7 +135,7 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     }
                 }
                 if(Wrap->Character == ' ') {
-                    StringNew[Length] = '\';
+                    StringNew[Length] = '\\';
                     Length++;
                     StringNew[Length] = '0';
                     Length++;
