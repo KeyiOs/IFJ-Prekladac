@@ -1,7 +1,6 @@
 /**
  * IFJ Projekt 2022
  * @author <xkento00> Samuel Kentos
- * @generovanie <xhorac20> Andrej Horacek
  */
 
 #include "error_handler.h"
@@ -121,14 +120,12 @@ int Keyword(_WRAP_ *Wrap){
         G_Return();                                                         //
     } else if(Token->Keyword == T_KEYWORD_RETURN && Dive != 0) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             //
-        printf("MOVE LF@retval$1 LF@%s$%d \n", Wrap->Token->String, Wrap->Dive);
         if((ERR = Expression(Wrap, 0)) != 0) {                              // Analyzator
             if(ERR == 100 && Wrap->Table->Type != T_KEYWORD_INT) return 4;  //
             else if(ERR == 200 && Wrap->Table->Type != T_KEYWORD_FLOAT) return 4;
             else if(ERR == 300 && Wrap->Table->Type != T_KEYWORD_STRING) return 4;
         }                                                                   //
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       // Bodkociarka
-        G_Return();                                                         //
     } else if(Token->Keyword == T_KEYWORD_WHILE) {
         G_WhileStart(Wrap->Dive);                                           //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
@@ -546,8 +543,8 @@ int main(){
     Wrap->Dive = 0;                                                         //
 
     Wrap->Source;                                                           // Vstup
-    //if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;   // !REMOVE
-    Wrap->Source = stdin;
+    if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;     // !REMOVE
+    //Wrap->Source = stdin;
     
     int ERR = Prolog(Wrap);                                                 // Prolog
     if(ERR != 0) {                                                          //

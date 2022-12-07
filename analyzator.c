@@ -110,7 +110,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
     while(1){
         StackTerminal = Get_Terminal(Stack);                // Ulozi posledny terminal zo staku
         CurrentT_Type = Get_Precedence(Wrap->Token->Type);  // Ulozi typ aktualneho tokenu
-        
+
         if(Wrap->Token->Type == T_TYPE_VARIABLE){
             _ITEMV_ *ItemTMP = SearchV(&Wrap->Table->Local, Wrap->Token->String);
             if(ItemTMP == NULL) return 5;
@@ -134,7 +134,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             } else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE){
                 if(Return < 100) Return = 300;                                  // Do premennej priradime po skonceni STRING
                 else if(Return < 300) return 7;                                 // Chyba typovej kompatibility
-            }
+            } else if(Wrap->Token->Type == T_TYPE_NULL_DATATYPE);
         } else if(CurrentT_Type == T_VAL) {
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Wrap->Token->String);
             if(TMP->Type == T_TYPE_INT_DATATYPE) {
@@ -146,7 +146,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             } else if(TMP->Type == T_TYPE_STRING_DATATYPE){
                 if(Return < 100) Return = 300;                                  // Do premennej priradime po skonceni STRING
                 else if(Return < 300) return 7;                                 // Chyba typovej kompatibility
-            }
+            } else if(TMP->Type == T_TYPE_NULL_DATATYPE);
         }
 
         if(Return == 300 && (CurrentT_Type < T_EQ && Wrap->Token->Type != T_TYPE_CONCATENATION)) return 2;  // Neplatna operacia pre stringy

@@ -185,7 +185,9 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
             else if(!strcmp(StringNew, "void")) KeyWord = 21;
 
             else if(!strcmp(StringNew, "null")) {
-                Wrap->Token = T_Assign(Wrap->Token, T_TYPE_NULL_DATATYPE, String, 0);
+                for(int i=0; i<10; i++) StringNew[i] = '\0';
+                StringNew = "nil";
+                Wrap->Token = T_Assign(Wrap->Token, T_TYPE_NULL_DATATYPE, StringNew, 0);
                 return 0;
             }
             break;
@@ -232,10 +234,8 @@ int Prolog(_WRAP_ *Wrap){
 
     while(Wrap->Character == ' ' || Wrap->Character == 9) if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
     if(Wrap->Character == 10 || Wrap->Character == 13) {
-        printf("Start: %i\n", Wrap->Character);
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         if(Wrap->Character == 10 && (Wrap->Character = getc(Wrap->Source)) == -1) return 1;
-        printf("Start 2: %i\n", Wrap->Character);
         Line++;
     } else if(Wrap->Character == '/') {
         int cmnt;
@@ -248,10 +248,8 @@ int Prolog(_WRAP_ *Wrap){
 
     Length = 0;
     for(int i=0; i<25; i++) String[Length+i] = '\0';
-    printf("End: %i\n", Wrap->Character);
     while(Wrap->Character != ' ' && Wrap->Character != 9 && Wrap->Character != 10 && Wrap->Character != 13 && Wrap->Character != EOF && Length != 25) {
         String[Length] = Wrap->Character;
-        printf("Char[%i]: %i\n", Length, Wrap->Character);
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         Length++;
     }

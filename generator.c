@@ -181,6 +181,8 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -195,6 +197,8 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -209,6 +213,8 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -221,6 +227,8 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -241,6 +249,8 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -257,6 +267,8 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -272,6 +284,8 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -284,6 +298,8 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -306,6 +322,8 @@ void G_CON(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
         printf("POPS LF@Val1\n");
         if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("CONCAT LF@Val1 LF@Val1 string@%s\n", Val2.String);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("CONCAT LF@Val1 LF@Val1 LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -353,6 +371,8 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -367,6 +387,8 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -381,6 +403,8 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -393,6 +417,8 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -413,6 +439,8 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -429,6 +457,8 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -444,6 +474,8 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -456,6 +488,8 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -476,6 +510,8 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -490,6 +526,8 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -504,6 +542,8 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -516,6 +556,8 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -540,6 +582,8 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -556,6 +600,8 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -571,6 +617,8 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -583,6 +631,8 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -609,6 +659,8 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
@@ -625,6 +677,8 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -640,6 +694,8 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val1);
+        } else if(Type1 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val1.String);
             printf("PUSHS LF@%s$%i\n", Val1.String, TMP->Dive);
@@ -652,6 +708,8 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
             printf("PUSHS string@%d\n", Val2);
+        } else if(Type2 == T_TYPE_NULL_DATATYPE){
+            printf("PUSHS nil@nil\n");
         } else{
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Val2.String);
             printf("PUSHS LF@%s$%i\n", Val2.String, TMP->Dive);
