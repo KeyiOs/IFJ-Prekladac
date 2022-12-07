@@ -1,6 +1,7 @@
 /**
  * IFJ Projekt 2022
  * @author <xkento00> Samuel Kentos
+ * @generovanie <xhorac20> Andrej Horacek
  */
 
 #include "error_handler.h"
