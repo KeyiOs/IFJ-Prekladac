@@ -545,7 +545,7 @@ int main(){
     Wrap->Dive = 0;                                                         //
 
     Wrap->Source;                                                           // Vstup
-    //if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;     // !REMOVE
+    //if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;   // !REMOVE
     Wrap->Source = stdin;
     
     int ERR = Prolog(Wrap);                                                 // Prolog
