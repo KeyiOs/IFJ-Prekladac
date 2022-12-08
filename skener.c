@@ -15,26 +15,18 @@ extern int Line;
 extern int Token_Number;
 
 int Strings(_WRAP_ *Wrap, char *String, int Type){    
-    char *StringNew = (char*) malloc(10*sizeof(char));
+    char *StringNew = (char*) malloc(1000*sizeof(char));
     if(StringNew == NULL) return 99;
 
     int Length = 0;
-    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
+    for(int i=0; i<1000; i++) StringNew[Length+i] = '\0';
 
     switch(Type){
         case 1: // String
             Wrap->Character = getc(Wrap->Source);
             while(Wrap->Character != '"'){
                 if(Wrap->Character == '$') return 1; // $ Moze byt v stringu iba cez escape sekvenciu
-                if(Length%10 == 9) {
-                    StringNew = (char*) realloc(StringNew, Length+10);
-                    if(StringNew == NULL) return 99;
-                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
-                }
                 if(Wrap->Character == '\\'){
-                    StringNew = (char*) realloc(StringNew, Length+10);
-                    if(StringNew == NULL) return 99;
-                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                     Wrap->Character = getc(Wrap->Source);
                     if(Wrap->Character == '"' || Wrap->Character == '\\'){
                         StringNew[Length] = '\\';
@@ -142,9 +134,6 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     }
                 }
                 if(Wrap->Character == ' ') {
-                    StringNew = (char*) realloc(StringNew, Length+10);
-                    if(StringNew == NULL) return 99;
-                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                     StringNew[Length] = '\\';
                     Length++;
                     StringNew[Length] = '0';

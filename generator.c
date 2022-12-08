@@ -91,6 +91,7 @@ void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
 }
 
 void G_CallStart(char *function, int count_of_vars) {
+    printf("CREATEFRAME\n");
     printf("DEFVAR TF@write$0\n");
     printf("MOVE TF@write$0 int@%d\n", count_of_vars);
 }
