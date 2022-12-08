@@ -32,15 +32,20 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                 }
                 if(Wrap->Character == '\\'){
-                    StringNew[Length] = '\\';
-                    Length++;
+                    StringNew = (char*) realloc(StringNew, Length+10);
+                    if(StringNew == NULL) return 99;
+                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                     Wrap->Character = getc(Wrap->Source);
                     if(Wrap->Character == '"' || Wrap->Character == '\\'){
+                        StringNew[Length] = '\\';
+                        Length++;
                         StringNew[Length] = Wrap->Character;
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
                     } else if(Wrap->Character == 'n'){
+                        StringNew[Length] = '\\';
+                        Length++;
                         StringNew[Length] = '0';
                         Length++;
                         StringNew[Length] = '1';
@@ -50,6 +55,8 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                         Wrap->Character = getc(Wrap->Source);
                         continue;
                     } else if(Wrap->Character == 't'){
+                        StringNew[Length] = '\\';
+                        Length++;
                         StringNew[Length] = '0';
                         Length++;
                         StringNew[Length] = '0';
@@ -135,6 +142,9 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                     }
                 }
                 if(Wrap->Character == ' ') {
+                    StringNew = (char*) realloc(StringNew, Length+10);
+                    if(StringNew == NULL) return 99;
+                    for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
                     StringNew[Length] = '\\';
                     Length++;
                     StringNew[Length] = '0';
@@ -146,8 +156,8 @@ int Strings(_WRAP_ *Wrap, char *String, int Type){
                 } else {
                     StringNew[Length] = Wrap->Character;
                     Length++;
-                    Wrap->Character = getc(Wrap->Source);
                 }
+                Wrap->Character = getc(Wrap->Source);
             }
             Wrap->Character = getc(Wrap->Source);
             break;

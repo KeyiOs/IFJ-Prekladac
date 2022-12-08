@@ -47,15 +47,15 @@ _STACK_ *Stack_Pop(_STACK_ *Stack) {
     return Stack;
 }
 
-int G_Stack_Push (_STACK_ *Stack, _TOKEN_ *Token) {
+_STACK_ *G_Stack_Push (_STACK_ *Stack, _TOKEN_ *Token) {
     if(Stack->Token.Type == T_TYPE_NULL) {
         Stack->Token = *Token;
     } else {
         _STACK_ *Stack_New = Stack;
         while(Stack_New->Previous != NULL) Stack_New = Stack_New->Previous;
         Stack_New->Previous = Stack_Create();
-        if(!Stack_New->Previous) return 99;
+        if(!Stack_New->Previous) return NULL;
         Stack_New->Previous->Token = *Token;
     }
-    return 0;
+    return Stack;
 }

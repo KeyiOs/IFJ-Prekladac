@@ -19,6 +19,6 @@ void Stack_Init ( _STACK_ *Stack );
 _STACK_ *Stack_Create ( );
 int Stack_Push ( _STACK_ *Stack, _TOKEN_ *Token );
 _STACK_ *Stack_Pop ( _STACK_ *Stack );
-int G_Stack_Push (_STACK_ *Stack, _TOKEN_ *Token);
+_STACK_ *G_Stack_Push (_STACK_ *Stack, _TOKEN_ *Token);
 
 #endif

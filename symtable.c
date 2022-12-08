@@ -28,14 +28,14 @@ _ITEMV_ *FreeV(_ITEMV_ *Item) {
 }
 
 // Inicializuje Premennu
-_ITEMV_ *InitV(char *Name, Token_Type Type) {
+_ITEMV_ *InitV(char *Name, Token_Type Type, int Dive) {
     _ITEMV_ *Item = malloc(sizeof(_ITEMV_));
     if (Item != NULL) {
         if((Item->Name = (char *) malloc(strlen(Name) + 1)) == NULL) return NULL;
         strcpy(Item->Name, Name);
         Item->Type = Type;
         Item->Init = 0;
-        Item->Dive = 0;
+        Item->Dive = Dive;
         Item->Left = NULL;
         Item->Right = NULL;
     } else return NULL;
@@ -43,35 +43,17 @@ _ITEMV_ *InitV(char *Name, Token_Type Type) {
 }
 
 // Vlozi premennu do tabulky, vracia TRUE/FALSE ci sa podarilo
-int InsertV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type) {
+int InsertV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type, int Dive) {
     _ITEMV_ *Item = *ItemPtr;
     if (Item == NULL) {
-        if(((*ItemPtr) = InitV(Name, Type)) == NULL) return 99;
+        if(((*ItemPtr) = InitV(Name, Type, Dive)) == NULL) return 99;
         else return 0;
     }
     int CMP = strcmp(Name, Item->Name);
     if(CMP == 0) (*ItemPtr)->Type = Type;
-    else if (CMP < 0) return InsertV(&(Item->Left), Name, Type);
-    else if (CMP > 0) return InsertV(&(Item->Right), Name, Type);
+    else if (CMP < 0) return InsertV(&(Item->Left), Name, Type, Dive);
+    else if (CMP > 0) return InsertV(&(Item->Right), Name, Type, Dive);
     else return 1;
-}
-
-// Vrat premennu, ak nenajde vytvori novu
-_ITEMV_ *GetV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type) {
-    _ITEMV_ *Item = *ItemPtr;
-    if(Item == NULL) {
-        if(((*ItemPtr) = InitV(Name, Type)) == NULL) return NULL;
-        else return (*ItemPtr);
-    }
-
-    int CMP = strcmp(Name, Item->Name);
-    if(CMP == 0) {
-        return Item;
-    } else if (CMP < 0) {
-        return GetV((&Item->Left), Name, Type);
-    } else if (CMP > 0) {
-        return GetV(&(Item->Right), Name, Type);
-    } else return NULL;
 }
 
 // Najdi a vrat premennu, ked nenajde NULL
@@ -200,7 +182,7 @@ int InsertParam(char *Fname, char *Pname, Token_Keyword Type, _ITEMF_ **ItemPtr)
     int ERR = AddParam(Pname, Type, &Item->Params);
     if(ERR != 0) return 99;
     if(SearchV(&Item->Local, Pname) != NULL) return 8;
-    InsertV(&Item->Local, Pname, Type - 16);
+    InsertV(&Item->Local, Pname, Type - 16, 0);
     return 0;
 }
 

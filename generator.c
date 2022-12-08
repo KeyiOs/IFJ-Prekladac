@@ -12,12 +12,15 @@
 
 int IntStack[256];
 int top = -1;
+int ID = 0;
+int Skip = 0;
 
 // _________________________________________Pomocne Funckie_____________________________________________________________
 
-void my_push(int ID) {
+void my_push() {
     top = top + 1;
     IntStack[top] = ID;
+    ID++;
 }
 
 void my_pop() {
@@ -47,7 +50,9 @@ void G_BigStart() {
 
     printf("\n# main body\n");
     printf("LABEL $$main\n");
-    printf("DEFVAR LF@retval$1\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("CREATEFRAME\n");
 }
 
 void G_BigEnd() {
@@ -86,12 +91,8 @@ void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
 }
 
 void G_CallStart(char *function, int count_of_vars) {
-    printf("CREATEFRAME\n");
-    printf("CLEARS\n");
-    if (strcmp(function, "write") == 0) {
-        printf("DEFVAR TF@write$0\n");
-        printf("MOVE TF@write$0 int@%d\n", count_of_vars);
-    }
+    printf("DEFVAR TF@write$0\n");
+    printf("MOVE TF@write$0 int@%d\n", count_of_vars);
 }
 
 void G_Call(char *function) {
@@ -109,6 +110,7 @@ void G_LABEL_end() {
 }
 
 void G_StartFunction(char *function) {
+    printf("JUMP skip$%i\n", Skip);
     printf("\n#Start of function A %s\n", function);
     G_LABEL_start(function);
 }
@@ -121,18 +123,18 @@ void G_EndFunction(char *function) {
 void G_Param(_PARAM_ *param) {
     if (param == NULL) return;
     while(param != NULL) {
-        printf("DEFVAR LF@%s$1\n", param->Name);
-        printf("POPS LF@%s$1\n", param->Name);
+        printf("DEFVAR LF@%s$0\n", param->Name);
+        printf("POPS LF@%s$0\n", param->Name);
         param = param->Next;
     }
     printf("DEFVAR LF@retval$1\n");
 }
 
-void G_IfGen(int ID) {
+void G_IfGen() {
     printf("#IF $if$%d\n", ID);
 }
 
-void G_IfStart(int ID) {
+void G_IfStart() {
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS $if$%d$else$\n", ID);
     my_push(ID);
@@ -148,11 +150,11 @@ void G_IfEnd() {
     my_pop();
 }
 
-void G_WhileStart(int ID) {
+void G_WhileStart() {
     printf("LABEL WHILE$CHECK$%d\n", ID);
 }
 
-void G_WhileJump(int ID) {
+void G_WhileJump() {
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS WHILE$END$%d\n", ID);
     my_push(ID);
@@ -167,6 +169,8 @@ void G_WhileEnd() {
 void G_Return(){
     printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("\nLABEL skip$%i\n", Skip);
+    Skip++;
 }
 
 void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
@@ -180,7 +184,7 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -196,7 +200,7 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -212,7 +216,7 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -226,7 +230,7 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -248,7 +252,7 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -266,7 +270,7 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -283,7 +287,7 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -297,7 +301,7 @@ void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -370,7 +374,7 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -386,7 +390,7 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -402,7 +406,7 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -416,7 +420,7 @@ void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -438,7 +442,7 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -456,7 +460,7 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -473,7 +477,7 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -487,7 +491,7 @@ void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -509,7 +513,7 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -525,7 +529,7 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -541,7 +545,7 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -555,7 +559,7 @@ void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -581,7 +585,7 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -599,7 +603,7 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -616,7 +620,7 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -630,7 +634,7 @@ void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -658,7 +662,7 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -676,7 +680,7 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -693,7 +697,7 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val1.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type1 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val1);
+            printf("PUSHS string@%s\n", Val1);
         } else if(Type1 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -707,7 +711,7 @@ void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2){
             float TMP = atof(Val2.String);
             printf("PUSHS float@%a\n", TMP);
         } else if(Type2 == T_TYPE_STRING_DATATYPE){
-            printf("PUSHS string@%d\n", Val2);
+            printf("PUSHS string@%s\n", Val2);
         } else if(Type2 == T_TYPE_NULL_DATATYPE){
             printf("PUSHS nil@nil\n");
         } else{
@@ -809,6 +813,7 @@ void G_write() {
     printf("PUSHFRAME\n");
     printf("DEFVAR LF@write$var\n");
     printf("DEFVAR LF@type$var\n");
+    
 
     printf("LABEL $while$write\n");                              // Cyklus START
     printf("JUMPIFEQ while$end LF@write$0 int@0\n");             // LF@write$0 = 0 then jump
@@ -833,7 +838,7 @@ void G_write() {
     printf("JUMP $write$\n");
 
     printf("LABEL $write$null\n");
-    printf("MOVE LF@write$var string@ \n");
+    printf("MOVE LF@write$var string@\n");
     printf("JUMP $write$\n");
 
     printf("LABEL while$end\n");

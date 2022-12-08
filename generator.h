@@ -16,7 +16,7 @@
 // _________________________________________Pomocne Funckie_____________________________________________________________
 
 /// Pushne int na vrchol zasobniku a inkrementuje ID
-void my_push(int ID);
+void my_push();
 
 /// Popne int z vrcholu zasobniku
 void my_pop();
@@ -68,10 +68,10 @@ void G_EndFunction(char *function);
 void G_Param(_PARAM_ *param);
 
 /// generovanie labelu pre IF
-void G_IfGen(int ID);
+void G_IfGen();
 
 /// generovanie vyhodnotenia pre IF
-void G_IfStart(int ID);
+void G_IfStart();
 
 /// generovanie else z IF
 void G_Else();
@@ -81,10 +81,10 @@ void G_IfEnd();
 
 /// Generovanie FOR - kontrola podmienok
 /// @param expression - podmienka
-void G_WhileStart(int ID);
+void G_WhileStart();
 
 /// Generovanie FOR - skok na koniec
-void G_WhileJump(int ID);
+void G_WhileJump();
 
 /// Generovanie FOR - koniec
 void G_WhileEnd();

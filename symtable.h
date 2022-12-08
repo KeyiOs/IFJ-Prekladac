@@ -18,13 +18,10 @@ void FreeItemV(_ITEMV_ *Item);
 _ITEMV_ *FreeV(_ITEMV_ *Item);
 
 // Inicializuje Premennu
-_ITEMV_ *InitV(char *Name, Token_Type Type);
+_ITEMV_ *InitV(char *Name, Token_Type Type, int Dive);
 
 // Vlozi premennu do tabulky, vracia TRUE/FALSE ci sa podarilo
-int InsertV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type);
-
-// Vrat premennu, ked nenajde NULL
-_ITEMV_ *GetV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type);
+int InsertV(_ITEMV_ **ItemPtr, char *Name, Token_Type Type, int Dive);
 
 // Najdi a vrat premennu ak nenajde vytvori novu
 _ITEMV_ *SearchV(_ITEMV_ **ItemPtr, char *Name);

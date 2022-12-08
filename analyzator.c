@@ -220,7 +220,6 @@ int Expression(_WRAP_ *Wrap, int Condition) {
                     }
                     if(Stack->Token.Type == T_TYPE_NULL && Brackets == 0) return Return;        // Spravne se doslo az na konec vyrazu
                     else if(Get_Precedence(Stack->Token.Type) == T_VAL)  {                      // Pokud zustala jen 1 promenna tak pop a return ze spravne
-                        printf("POPS LF@retval$1\n");                                           // Ulozenie vysledku pre zapisanie do premennej
                         Stack = Stack_Pop(Stack);
                         if(Stack->Token.Type == T_TYPE_NULL && Brackets == 0) return Return;    // Spravne se doslo az na konec vyrazu
                         else return 2;                                                          // Zly pocet zatvoriek
