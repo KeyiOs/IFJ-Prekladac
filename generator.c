@@ -50,9 +50,7 @@ void G_BigStart() {
 
     printf("\n# main body\n");
     printf("LABEL $$main\n");
-    printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("CREATEFRAME\n");
 }
 
 void G_BigEnd() {
@@ -90,14 +88,9 @@ void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table) {
     }
 }
 
-void G_CallStart(char *function, int count_of_vars) {
-    printf("CREATEFRAME\n");
-    printf("DEFVAR TF@write$0\n");
-    printf("MOVE TF@write$0 int@%d\n", count_of_vars);
-}
-
-void G_Call(char *function) {
-    printf("CALL func$%s\n", function);
+void G_RetVal(char *Name, int Dive) {
+    printf("DEFVAR LF@%s$%i\n", Name, Dive);
+    printf("POPS LF@%s$%i\n", Name, Dive);
 }
 
 void G_LABEL_start(char *label) {
@@ -112,7 +105,6 @@ void G_LABEL_end() {
 
 void G_StartFunction(char *function) {
     printf("JUMP skip$%i\n", Skip);
-    printf("\n#Start of function A %s\n", function);
     G_LABEL_start(function);
 }
 
@@ -736,7 +728,6 @@ void G_reads() {
     printf("LABEL func$reads\n");
     printf("PUSHFRAME\n");                                  //  TF -> LF
 
-    printf("DEFVAR LF@retval$1\n");                         //  LF@retval1
     printf("DEFVAR LF@param1\n");                           //  LF@param1
     printf("READ LF@param1 string\n");                      //  LF@param1 = string zo vstupu
     printf("DEFVAR LF@errorCheck\n");                       //  LF@errorCheck
@@ -755,12 +746,12 @@ void G_reads() {
     printf("SETCHAR LF@param1 LF@strlen string@\\000\n");   // v LF@param1 prepise znak na pozici LF@strlen na string@\000
 
     printf("LABEL $END$OF$READS\n");
-    printf("MOVE LF@retval$1 LF@param1\n");             // LF@retval$1 = LF@param1
+    printf("PUSHS LF@param1\n");             // LF@retval$1 = LF@param1
     printf("POPFRAME\n");                               // LF -> TF
     printf("RETURN\n");                                 // RETURN na CALL s TF
 
     printf("LABEL $ERROR$READS\n");
-    printf("MOVE LF@retval$1 nil@nil\n");               // LF@retval$1 = nil@nil
+    printf("PUSHS nil@nil\n");               // LF@retval$1 = nil@nil
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -770,19 +761,18 @@ void G_readi() {
     printf("LABEL func$readi\n");
     printf("PUSHFRAME\n");                      //  TF -> LF
 
-    printf("DEFVAR LF@retval$1\n");
     printf("DEFVAR LF@param$1\n");
     printf("DEFVAR LF@error$check\n");
     printf("READ LF@param$1 int\n");                    // LF@param$1 = int zo standartneho vstupu
     printf("TYPE LF@error$check LF@param$1\n");         // LF@error$check = typ LF@param$1
     //  if ($ERROR$INPUTI != string@int) -> label $ERROR$READI
     printf("JUMPIFNEQ $ERROR$READI string@int LF@error$check\n");
-    printf("MOVE LF@retval$1 LF@param$1\n");           // LF@retval$1 = LF@param$1
+    printf("PUSHS LF@param$1\n");           // Stack = LF@param$1
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $ERROR$READI\n");
-    printf("MOVE LF@retval$1 nil@nil\n");
+    printf("PUSHS nil@nil\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -792,18 +782,17 @@ void G_readf() {
     printf("LABEL func$readf\n");
     printf("PUSHFRAME\n");
 
-    printf("DEFVAR LF@retval$1\n");
     printf("DEFVAR LF@param$1\n");
     printf("DEFVAR LF@error$check\n");
     printf("READ LF@param$1 float\n");
     printf("TYPE LF@error$check LF@param$1\n");
     printf("JUMPIFNEQ $ERROR$READF string@float LF@error$check\n");
-    printf("MOVE LF@retval$1 LF@param$1\n");
+    printf("PUSHS LF@param$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $ERROR$READF\n");
-    printf("MOVE LF@retval$1 nil@nil\n");
+    printf("PUSHS nil@nil\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -855,23 +844,23 @@ void G_floatval() {
 
     printf("DEFVAR LF@$1\n");           // LF@$1
     printf("POPS LF@$1\n");             // Vrchol zasobniku -> LF@$1
-    printf("DEFVAR LF@retval$1\n");
     printf("DEFVAR LF@type$var\n");
     printf("TYPE LF@type$var LF@$1\n");
 
     printf("JUMPIFEQ $floatval$null nil@nil LF@$1\n");
     printf("JUMPIFEQ $floatval$int string@int LF@type$var\n");
-    printf("MOVE LF@retval$1 LF@$1\n");
+    printf("PUSHS LF@$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $floatval$int\n");
-    printf("INT2FLOAT LF@retval$1 LF@$1\n");
+    printf("PUSHS LF@$1\n");
+    printf("INT2FLOATS LF@$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $floatval$null\n");
-    printf("MOVE LF@retval$1 int@0\n");
+    printf("PUSHS int@0\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -883,23 +872,22 @@ void G_intval() {
 
     printf("DEFVAR LF@$1\n");           // LF@$1
     printf("POPS LF@$1\n");             // Vrchol zasobniku -> LF@$1
-    printf("DEFVAR LF@retval$1\n");
     printf("DEFVAR LF@type$var\n");
     printf("TYPE LF@type$var LF@$1\n");
 
     printf("JUMPIFEQ $intval$null nil@nil LF@$1\n");
     printf("JUMPIFEQ $intval$int string@float LF@type$var\n");
-    printf("MOVE LF@retval$1 LF@$1\n");
+    printf("PUSHS LF@$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $intval$float\n");
-    printf("FLOAT2INT LF@retval$1 LF@$1\n");
-    printf("POPFRAME\n");
+    printf("PUSHS LF@$1\n");
+    printf("FLOAT2INTS\n");
     printf("RETURN\n");
 
     printf("LABEL $intval$null\n");
-    printf("MOVE LF@retval$1 float@0x0.0p+0\n");
+    printf("PUSHS float@0x0.0p+0\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -911,17 +899,16 @@ void G_strval() {
 
     printf("DEFVAR LF@$1\n");           // LF@$1
     printf("POPS LF@$1\n");             // Vrchol zasobniku -> LF@$1
-    printf("DEFVAR LF@retval$1\n");
     printf("DEFVAR LF@type$var\n");
     printf("TYPE LF@type$var LF@$1\n");
 
     printf("JUMPIFEQ $strval$null nil@nil LF@$1\n");
-    printf("MOVE LF@retval$1 LF@$1\n");
+    printf("PUSHS LF@$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
     printf("LABEL $strval$null\n");
-    printf("MOVE LF@retval$1 string@""\n");
+    printf("PUSHS string@""\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -931,9 +918,10 @@ void G_strlen() {
     printf("LABEL func$strlen\n");
     printf("PUSHFRAME\n");
 
-    printf("DEFVAR LF@retval$1\n");
-    printf("POPS LF@retval$1\n");
-    printf("STRLEN LF@retval$1 LF@retval$1\n");
+    printf("DEFVAR LF@lenvar$1\n");
+    printf("POPS LF@lenvar$1\n");
+    printf("STRLEN LF@lenvar$1 LF@lenvar$1\n");
+    printf("PUSHS LF@lenvar$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -1020,6 +1008,7 @@ void G_substring(){
     printf("MOVE LF@retval$1 nil@nil\n");
 
     printf("LABEL $substring$end\n");
+    printf("PUSHS LF@retval$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -1031,6 +1020,7 @@ void G_ord(){
     printf("DEFVAR LF@ord$string\n");
     printf("DEFVAR LF@ord$int\n");
     printf("DEFVAR LF@retval$1\n");
+
     printf("POPS LF@ord$string\n");
     printf("MOVE LF@ord$int int@0\n");
     printf("DEFVAR LF@error$check\n");
@@ -1051,6 +1041,8 @@ void G_ord(){
     printf("RETURN\n");
     printf("LABEL $ERROR$ORD\n");
     printf("MOVE LF@retval$1 int@0\n");
+
+    printf("PUSHS LF@retval$1\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -1060,11 +1052,7 @@ void G_chr() {
     printf("LABEL func$chr\n");
     printf("PUSHFRAME\n");
 
-    printf("DEFVAR LF@chr$int\n");
-    printf("DEFVAR LF@retval$1\n");
-    printf("POPS LF@chr$int\n");
-
-    printf("INT2CHAR LF@retval$1 LF@chr$int\n");
+    printf("INT2CHARS\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 }

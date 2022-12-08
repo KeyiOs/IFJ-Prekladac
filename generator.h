@@ -40,14 +40,7 @@ _STACK_ *G_CallParam(_STACK_ *local_st, _ITEMF_ *Table);
 /// @param local_st pointer na strukturu zasobnik
 void G_PushParams(_STACK_ *local_st, _ITEMF_ *Table);
 
-/// generovanie CALL
-/// @param function - meno funkcie
-/// @param count_of_vars - pocet vstupov danej funkcie
-void G_CallStart(char *function, int count_of_vars);
-
-/// generovanie CALL-u
-/// @param function - meno funkcie
-void G_Call(char *function);
+void G_RetVal(char *Name, int Dive);
 
 /// generovanie LABEL zaciatok
 /// @param label - meno LABEL

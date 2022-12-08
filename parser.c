@@ -139,7 +139,7 @@ int Keyword(_WRAP_ *Wrap){
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        EditVariable(&Wrap->Table->Local, Wrap->Dive);                       //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
         G_WhileEnd();                                                       //
     } else if(Token->Keyword == T_KEYWORD_ELSE) {
         G_Else();                                                           //
@@ -148,7 +148,7 @@ int Keyword(_WRAP_ *Wrap){
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        EditVariable(&Wrap->Table->Local, Wrap->Dive);                       //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
         G_IfEnd();                                                          //
     } else if(Token->Keyword == T_KEYWORD_IF) {
         G_IfGen();                                                          //
@@ -162,7 +162,7 @@ int Keyword(_WRAP_ *Wrap){
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        EditVariable(&Wrap->Table->Local, Wrap->Dive);                       //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
     } else if(Token->Keyword == T_KEYWORD_SUBSTRING) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
@@ -190,8 +190,9 @@ int Keyword(_WRAP_ *Wrap){
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                              //
-        G_Call("substring");                                                //
+        Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                //
+        printf("CREATEFRAME");                                              //
+        printf("CALL func$substring\n");                                    //
     } else if(Token->Keyword == T_KEYWORD_FLOATVAL ||
               Token->Keyword == T_KEYWORD_INTVAL) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
@@ -213,11 +214,13 @@ int Keyword(_WRAP_ *Wrap){
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         if(Token->Keyword == T_KEYWORD_FLOATVAL){                           //
-            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                          //
-            G_Call("floatval");                                             //
+            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$floatval\n");                                 //
         } else if(Token->Keyword == T_KEYWORD_INTVAL){                      //
-            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                          //
-            G_Call("intval");                                               //
+            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$intval\n");                                   //
         }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_STRVAL ||
               Token->Keyword == T_KEYWORD_STRLEN ||
@@ -239,14 +242,17 @@ int Keyword(_WRAP_ *Wrap){
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         if(Token->Keyword == T_KEYWORD_STRVAL){                             //
-            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                          //
-            G_Call("strval");                                               //
+            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$strval\n");                                   //
         } else if(Token->Keyword == T_KEYWORD_STRLEN){                      //
-            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                          //
-            G_Call("strlen");                                               //
+            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$strlen\n");                                   //
         } else{                                                             //
-            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                          //
-            G_Call("ord");                                                  //
+            Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$ord\n");                                      //
         }
     } else if(Token->Keyword == T_KEYWORD_WRITE) {
         int Cnt = 0;                                                        //
@@ -271,14 +277,16 @@ int Keyword(_WRAP_ *Wrap){
         }                                                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        G_CallStart("write", Cnt);                                          //
-        _STACK_ *TMP = Stack_Create();
-        while(Wrap->Stack->Token.Type != T_TYPE_NULL){
-            Stack_Push(TMP, &Wrap->Stack->Token);
-            Wrap->Stack = Stack_Pop(Wrap->Stack);
-        }
+        printf("CREATEFRAME\n");                                            //
+        printf("DEFVAR TF@write$0\n");                                      //
+        printf("MOVE TF@write$0 int@%d\n", Cnt);                            //
+        _STACK_ *TMP = Stack_Create();                                      //
+        while(Wrap->Stack->Token.Type != T_TYPE_NULL){                      //
+            Stack_Push(TMP, &Wrap->Stack->Token);                           //
+            Wrap->Stack = Stack_Pop(Wrap->Stack);                           //
+        }                                                                   //
         Wrap->Stack = G_CallParam(TMP, Wrap->Table);                        //
-        G_Call("write");                                                    //
+        printf("CALL func$write\n");                                        //
     } else if(Token->Keyword == T_KEYWORD_READS ||
               Token->Keyword == T_KEYWORD_READI ||
               Token->Keyword == T_KEYWORD_READF) {
@@ -290,14 +298,15 @@ int Keyword(_WRAP_ *Wrap){
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         if(Keyword == T_KEYWORD_READS){                                     //
-            G_Call("reads");                                                //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$reads\n");                                    //
         }                                                                   //
         else if(Keyword == T_KEYWORD_READI){                                //
-            G_Call("readi");                                                //
-        }                                                                   //
-        else{                                                               //
-        
-            G_Call("readf");                                                //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$readi\n");                                    //
+        } else{                                                             //
+            printf("CREATEFRAME");                                          //
+            printf("CALL func$readf\n");                                    //
         }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_CHR) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
@@ -316,11 +325,9 @@ int Keyword(_WRAP_ *Wrap){
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                              //
-        printf("CREATEFRAME\n");
-        printf("PUSHFRAME\n");
-        printf("CREATEFRAME\n");
-        G_Call("chr");                                                      //
+        Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                //
+        printf("CREATEFRAME");                                              //
+        printf("CALL func$chr\n");                                          //
     } else return 2;                                                        //
 
     return 0;
@@ -403,12 +410,9 @@ int Function(_WRAP_ *Wrap){
         else return 2;                                                      //
         Params = Params->Next;                                              //
     }                                                                       //
-    Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                                  //
-    printf("CREATEFRAME\n");
-    printf("PUSHFRAME\n");
-    printf("CREATEFRAME\n");
-    G_Call(Name);                                                           //
-    printf("POPFRAME\n");
+    Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                    //
+    printf("CREATEFRAME");                                                  //
+    printf("CALL func$%s\n", Name);                                         //
 
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Bodkociarka
     if(Token->Type != T_TYPE_SEMICOLON) return 2;                           //
@@ -463,33 +467,28 @@ int Variable(_WRAP_ *Wrap){
                     Token->Keyword == T_KEYWORD_FLOATVAL) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, Wrap->Dive);
             else return 2;                                                  //
             if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
-            if(TMP3 == NULL) {                                              //
-                printf("DEFVAR LF@%s$%i\n", Name, Wrap->Dive);              //
-                printf("MOVE LF@%s$%i TF@retval$1\n", Name, Wrap->Dive);    //
-            } else printf("MOVE LF@%s$%i TF@retval$1\n", Name, TMP3->Dive); //
+            if(TMP3 == NULL) G_RetVal(Name, Wrap->Dive);                    //
+            else printf("POPS LF@%s$%i\n", TMP3->Name, TMP3->Dive);
             return 0;                                                       //
         } else if(Token->Type == T_TYPE_FUNCTION) {                         //
             _ITEMF_ *TMP = SearchF(&Wrap->Table->Root, Token->String);      //
             if((ERR = Function(Wrap)) != 0) return ERR;                     //
             InsertV(&Wrap->Table->Local, Name, TMP->Type - 16, Wrap->Dive); //
-            if(TMP3 == NULL) {                                              //
-                printf("DEFVAR LF@%s$%i\n", Name, Wrap->Dive);              //
-                printf("POPS LF@%s$%i\n", Name, Wrap->Dive);                //
-            } else printf("POPS LF@%s$%i\n", Name, TMP3->Dive);             //
+            if(TMP3 == NULL) G_RetVal(Name, Wrap->Dive);                    //
+            else printf("POPS LF@%s$%i\n", TMP3->Name, TMP3->Dive);         //
         } else if((ERR = Expression(Wrap, 0)) != 0) {                       // Analyzator
             if(TMP3 == NULL) {                                              //
-                printf("DEFVAR LF@%s$%i\n", Name, Wrap->Dive);              //
                 if(ERR == 100) InsertV(&Wrap->Table->Local, Name, T_TYPE_INT_DATATYPE, Wrap->Dive);
                 else if(ERR == 200) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, Wrap->Dive);
                 else if(ERR == 300) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE, Wrap->Dive);
                 else return ERR;                                            //
-                printf("POPS LF@%s$%i\n", Name, Wrap->Dive);                //
+                G_RetVal(Name, Wrap->Dive);                                 //
             } else {                                                        //
                 if(ERR == 100) InsertV(&Wrap->Table->Local, Name, T_TYPE_INT_DATATYPE, TMP3->Dive);
                 else if(ERR == 200) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, TMP3->Dive);
                 else if(ERR == 300) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE, TMP3->Dive);
                 else return ERR;                                            //
-                printf("POPS LF@%s$%i\n", Name, TMP3->Dive);                //
+                printf("POPS LF@%s$%i\n", TMP3->Name, TMP3->Dive);          //
             }                                                               //
         }                                                                   //
     }                                                                       //
@@ -563,8 +562,7 @@ int main(){
     Wrap->Dive = 0;                                                         //
 
     Wrap->Source;                                                           // Vstup
-    if(!(Wrap->Source = fopen("Input.txt", "r"))) Wrap->Source = stdin;     // !REMOVE
-    //Wrap->Source = stdin;
+    Wrap->Source = stdin;
     
     int ERR = Prolog(Wrap);                                                 // Prolog
     if(ERR != 0) {                                                          //
