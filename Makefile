@@ -1,0 +1,9 @@
+OBJ = error_handler.c analyzator.c stack.c generator.c parser.c skener.c symtable.c
+CFLAGS=-I.
+CC=gcc
+
+compiler: $(OBJ)
+	@$(CC) $(OBJ) -o $@ $(CFLAGS)
+
+clean:
+	rm *.o
