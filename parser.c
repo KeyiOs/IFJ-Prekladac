@@ -48,9 +48,9 @@ _TOKEN_ *T_Assign(_TOKEN_ *Token, Token_Type Type, char *String, Token_Keyword K
             int Length = strlen(String);
 
             Token->String = NULL;
-            Token->String = malloc((Length+1)*sizeof(char));
+            Token->String = (char*) malloc(Length*sizeof(char));
             if(Token->String == NULL) return NULL;
-            for(int i=0; i<Length+1; i++) Token->String[i] = '\0';
+            for(int i=0; i<Length; i++) Token->String[i] = '\0';
 
             strcpy(Token->String,String);
             break;
@@ -106,11 +106,7 @@ int Keyword(_WRAP_ *Wrap){
 
     if(Token->Keyword == T_KEYWORD_FUNCTION && Dive == 0) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Meno Funkcie
-        if(Token->Type == T_TYPE_KEYWORD){                                  //
-            if(5 < Token->Keyword && Token->Keyword  < 17) return 3;        //
-            else return 2;                                                  //
-        }                                                                   //
-        else if(Token->Type != T_TYPE_FUNCTION) return 2;                   //
+        if(Token->Type != T_TYPE_FUNCTION) return 2;                        //
         char *Name = Token->String;                                         //
         if(SearchF(&Table, Name) != NULL) return 3;                         // Overenie Funkcie
         if((ERR = F_Declare(Wrap)) != 0) return ERR;                        //
@@ -121,59 +117,52 @@ int Keyword(_WRAP_ *Wrap){
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
         Wrap->Table = Wrap->Table->Root;                                    //
-        Wrap->Table->Local = EditVariable(&Wrap->Table->Local, Wrap->Dive); //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
         G_Return();                                                         //
-    } else if(Token->Keyword == T_KEYWORD_RETURN) {
+    } else if(Token->Keyword == T_KEYWORD_RETURN && Dive != 0) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             //
-        if(Token->Type != T_TYPE_SEMICOLON) {                               //
-            if((ERR = Expression(Wrap, 0)) != 0 && ERR >= 100) {            // Analyzator
-                if(strcmp(Wrap->Table->Name, "main") != 0) {                //
-                    if(ERR == 100 && Wrap->Table->Type != T_KEYWORD_INT) return 4;
-                    else if(ERR == 200 && Wrap->Table->Type != T_KEYWORD_FLOAT) return 4;
-                    else if(ERR == 300 && Wrap->Table->Type != T_KEYWORD_STRING) return 4;
-                    else if(ERR == 400 && Wrap->Table->Type != T_KEYWORD_VOID) return 4;
-                }                                                           //
-            } else return ERR;                                              //
-            if(Token->Type != T_TYPE_SEMICOLON) return 2;                   // Bodkociarka
-        } else if(Table->Type != T_KEYWORD_VOID && strcmp(Wrap->Table->Name, "main") != 0) return 6;
-        for(int i = 0; i < Wrap->Dive; i++) printf("POPFRAME\n");           //
-        printf("RETURN\n");                                                 //
+        if((ERR = Expression(Wrap, 0)) != 0) {                              // Analyzator
+            if(ERR == 100 && Wrap->Table->Type != T_KEYWORD_INT) return 4;  //
+            else if(ERR == 200 && Wrap->Table->Type != T_KEYWORD_FLOAT) return 4;
+            else if(ERR == 300 && Wrap->Table->Type != T_KEYWORD_STRING) return 4;
+        }                                                                   //
+        if(Token->Type != T_TYPE_SEMICOLON) return 2;                       // Bodkociarka
     } else if(Token->Keyword == T_KEYWORD_WHILE) {
         G_WhileStart();                                                     //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         if((ERR = Expression(Wrap, 1)) < 100 && ERR != 0) return ERR;       // Analyzator
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
-        G_WhileJump(Wrap);                                                  //
+        G_WhileJump();                                                      //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        Wrap->Table->Local = EditVariable(&Wrap->Table->Local, Wrap->Dive); //
-        G_WhileEnd(Wrap);                                                   //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
+        G_WhileEnd();                                                       //
     } else if(Token->Keyword == T_KEYWORD_ELSE) {
-        G_Else(Wrap);                                                       //
+        G_Else();                                                           //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        Wrap->Table->Local = EditVariable(&Wrap->Table->Local, Wrap->Dive); //
-        G_IfEnd(Wrap);                                                      //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
+        G_IfEnd();                                                          //
     } else if(Token->Keyword == T_KEYWORD_IF) {
         G_IfGen();                                                          //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         if((ERR = Expression(Wrap, 1)) < 100 && ERR != 0) return ERR;       // Analyzator
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  // Zatvorena Zatvorka
-        G_IfStart(Wrap);                                                    //
+        G_IfStart();                                                        //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Mnozinova Zatvorka
         if(Token->Type != T_TYPE_OPEN_CURLY_BRACKET) return 2;              //
         Wrap->Dive++;                                                       //
         if((ERR = Start(Wrap)) != 0) return ERR;                            //
         Wrap->Dive--;                                                       //
-        Wrap->Table->Local = EditVariable(&Wrap->Table->Local, Wrap->Dive); //
+        EditVariable(&Wrap->Table->Local, Wrap->Dive);                      //
     } else if(Token->Keyword == T_KEYWORD_SUBSTRING) {
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
@@ -184,7 +173,7 @@ int Keyword(_WRAP_ *Wrap){
             if(ItemTMP == NULL) return 5;                                   //
             if(ItemTMP->Type != T_TYPE_STRING_DATATYPE) return 4;           //
         }                                                                   //
-        Stack_Push(Wrap->Stack, Token);                                     //
+        G_Stack_Push(Wrap->Stack, Token);                                   //
         for(int i = 0; i < 2; i++) {                                        //
             if((ERR = Scan(Wrap)) != 0) return ERR;                         // Ciarka
             if(Token->Type != T_TYPE_COMMA) return 2;                       //
@@ -195,18 +184,17 @@ int Keyword(_WRAP_ *Wrap){
                 if(ItemTMP == NULL) return 5;                               //
                 if(ItemTMP->Type != T_TYPE_INT_DATATYPE) return 4;          //
             }                                                               //
-            Stack_Push(Wrap->Stack, Token);                                 //
+            G_Stack_Push(Wrap->Stack, Token);                               //
         }                                                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                //
-        printf("CREATEFRAME\n");                                            // ! Chybal novy riadok
+        printf("CREATEFRAME");                                              //
         printf("CALL func$substring\n");                                    //
     } else if(Token->Keyword == T_KEYWORD_FLOATVAL ||
               Token->Keyword == T_KEYWORD_INTVAL) {
-        Token_Keyword TypeTMP = Token->Keyword;
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Number
@@ -225,19 +213,18 @@ int Keyword(_WRAP_ *Wrap){
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        if(TypeTMP == T_KEYWORD_FLOATVAL){                                  //
+        if(Token->Keyword == T_KEYWORD_FLOATVAL){                           //
             Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$floatval\n");                                 //
-        } else if(TypeTMP == T_KEYWORD_INTVAL){                             //
+        } else if(Token->Keyword == T_KEYWORD_INTVAL){                      //
             Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$intval\n");                                   //
         }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_STRVAL ||
               Token->Keyword == T_KEYWORD_STRLEN ||
               Token->Keyword == T_KEYWORD_ORD) {
-        Token_Keyword TypeTMP = Token->Keyword;                             //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // String
@@ -246,36 +233,33 @@ int Keyword(_WRAP_ *Wrap){
             if(Token->Type != T_TYPE_VARIABLE) return 2;                    //
             _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);       //
             if(ItemTMP == NULL) return 5;                                   //
-            if(ItemTMP->Type != T_TYPE_STRING_DATATYPE &&                   //
-               ItemTMP->Type != T_TYPE_NULL_DATATYPE) return 4;             //
+            if(ItemTMP->Type != T_KEYWORD_STRING &&                         //
+               ItemTMP->Type != T_KEYWORD_NULL) return 4;                   //
         }                                                                   //
-        Stack_Push(Wrap->Stack, Token);                                     //
+        G_Stack_Push(Wrap->Stack, Token);                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
-        if(TypeTMP == T_KEYWORD_STRVAL){                                    //
+        if(Token->Keyword == T_KEYWORD_STRVAL){                             //
             Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$strval\n");                                   //
-        } else if(TypeTMP == T_KEYWORD_STRLEN){                             //
+        } else if(Token->Keyword == T_KEYWORD_STRLEN){                      //
             Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$strlen\n");                                   //
         } else{                                                             //
             Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);            //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$ord\n");                                      //
         }
     } else if(Token->Keyword == T_KEYWORD_WRITE) {
         int Cnt = 0;                                                        //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Otvorena Zatvorka
         if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                    //
-        int Comma = 0;
         while(Token->Type != T_TYPE_CLOSED_BRACKET) {                       // Zatvorena Zatvorka
             if((ERR = Scan(Wrap)) != 0) return ERR;                         // Term
-            if(Token->Type == T_TYPE_CLOSED_BRACKET && Comma == 0) break;   //
-            else if(Token->Type == T_TYPE_CLOSED_BRACKET && Comma == 1) return 2;
             if(Token->Type != T_TYPE_STRING_DATATYPE &&                     //
                Token->Type != T_TYPE_FLOAT_DATATYPE &&                      //      
                Token->Type != T_TYPE_NULL_DATATYPE &&                       //
@@ -283,12 +267,12 @@ int Keyword(_WRAP_ *Wrap){
                 if(Token->Type != T_TYPE_VARIABLE) return 2;                //
                 _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);   //
                 if(ItemTMP == NULL) return 5;                               //
-                if((1 > ItemTMP->Type || ItemTMP->Type > 4) && ItemTMP->Type != T_TYPE_VARIABLE) return 4;
+                if(1 > ItemTMP->Type || ItemTMP->Type > 4) return 4;        //
             }                                                               //
             G_Stack_Push(Wrap->Stack, Token);                               //
             if((ERR = Scan(Wrap)) != 0) return ERR;                         // Ciarka
-            if(Token->Type == T_TYPE_COMMA) Comma = 1;                      //
-            else if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;         //
+            if(Token->Type != T_TYPE_COMMA &&                               //
+               Token->Type != T_TYPE_CLOSED_BRACKET) return 2;              //
             Cnt++;                                                          //
         }                                                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
@@ -314,14 +298,14 @@ int Keyword(_WRAP_ *Wrap){
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         if(Keyword == T_KEYWORD_READS){                                     //
-            printf("CREATEFRAME\n");                                        // ! Chybal novy riadok
+            printf("CREATEFRAME");                                          //
             printf("CALL func$reads\n");                                    //
         }                                                                   //
         else if(Keyword == T_KEYWORD_READI){                                //
-            printf("CREATEFRAME\n");                                        // ! Chybal novy riadok
+            printf("CREATEFRAME");                                          //
             printf("CALL func$readi\n");                                    //
         } else{                                                             //
-            printf("CREATEFRAME\n");                                        //
+            printf("CREATEFRAME");                                          //
             printf("CALL func$readf\n");                                    //
         }                                                                   //
     } else if(Token->Keyword == T_KEYWORD_CHR) {
@@ -336,13 +320,13 @@ int Keyword(_WRAP_ *Wrap){
             if(ItemTMP->Type != T_TYPE_NULL_DATATYPE &&                     //
                ItemTMP->Type != T_TYPE_INT_DATATYPE) return 4;              //
         }                                                                   //
-        Stack_Push(Wrap->Stack, Token);                                     //
+        G_Stack_Push(Wrap->Stack, Token);                                   //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
         if(Token->Type != T_TYPE_CLOSED_BRACKET) return 2;                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Bodkociarka
         if(Token->Type != T_TYPE_SEMICOLON) return 2;                       //
         Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                //
-        printf("CREATEFRAME\n");                                            // ! Chybal novy riadok
+        printf("CREATEFRAME");                                              //
         printf("CALL func$chr\n");                                          //
     } else return 2;                                                        //
 
@@ -363,7 +347,6 @@ int F_Declare(_WRAP_ *Wrap){
     if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                        //
     while(Token->Type != T_TYPE_CLOSED_BRACKET) {                           // Zatvorena Zatvorka
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Datovy Typ
-        if(Token->Type == T_TYPE_CLOSED_BRACKET) break;                     //
         Token_Keyword Type = Token->Keyword;                                //
         if(Token->Type != T_TYPE_KEYWORD) return 2;                         //
         if(Token->Keyword != T_KEYWORD_STRING &&                            //
@@ -384,7 +367,6 @@ int F_Declare(_WRAP_ *Wrap){
     if(Token->Type != T_TYPE_KEYWORD) return 2;                             //
     if(Token->Keyword != T_KEYWORD_STRING &&                                //
        Token->Keyword != T_KEYWORD_FLOAT &&                                 //
-       Token->Keyword != T_KEYWORD_VOID &&                                  //
        Token->Keyword != T_KEYWORD_INT) return 2;                           //
     if((ERR = ReturnF(&Wrap->Table, Name, Wrap->Token->Keyword)) != 0) return 99;
 
@@ -406,75 +388,30 @@ int Function(_WRAP_ *Wrap){
 
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Otovrena Zatvorka
     if(Token->Type != T_TYPE_OPEN_BRACKET) return 2;                        //
-    if(!Params){
-        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Zatvorena Zatvorka
-        if(Token->Type == T_TYPE_STRING_DATATYPE ||                         //
-           Token->Type == T_TYPE_FLOAT_DATATYPE ||                          //      
-           Token->Type == T_TYPE_NULL_DATATYPE ||                           //
-           Token->Type == T_TYPE_INT_DATATYPE ||                            //
-           Token->Type == T_TYPE_VARIABLE) return 4;                        //
-    }
     while(Params) {                                                         // Pokial su tokeny
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Term
         if(Token->Type != T_TYPE_STRING_DATATYPE &&                         //
            Token->Type != T_TYPE_FLOAT_DATATYPE &&                          //      
            Token->Type != T_TYPE_NULL_DATATYPE &&                           //
            Token->Type != T_TYPE_INT_DATATYPE) {                            //
-            if(Token->Type != T_TYPE_VARIABLE) {                            //
-                if(Token->Type == T_TYPE_CLOSED_BRACKET) return 4;          //
-                else return 2;                                              //
-            }                                                               //
+            if(Token->Type != T_TYPE_VARIABLE) return 2;                    // Premenna
             _ITEMV_ *ItemTMP = SearchV(&Table->Local, Token->String);       //
             if(ItemTMP == NULL) return 5;                                   //
             if((T_TYPE_STRING_DATATYPE > ItemTMP->Type || ItemTMP->Type > T_TYPE_INT_DATATYPE) &&
                 ItemTMP->Type != T_TYPE_VARIABLE) return 4;                 //
-            if(Params->Type - 16 != ItemTMP->Type && ItemTMP->Type != T_TYPE_VARIABLE) {
-                if(Params->Type == T_KEYWORD_FLOAT && ItemTMP->Type == T_TYPE_INT_DATATYPE) {
-                    printf("PUSHS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);
-                    printf("CREATEFRAME\n");                                //
-                    printf("CALL func$floatval\n");                         //
-                    printf("POPS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);//
-                    ItemTMP->Type = T_TYPE_FLOAT_DATATYPE;                  //
-                } else return 4;                                            //
-            } Stack_Push(Wrap->Stack, Token);                               //
-        } else if(Params->Type - 16 != Token->Type){                        //
-            if(Token->Type == T_TYPE_NULL_DATATYPE){                        //
-                Token_Type TypeTMP = Params->Type - 16;                     //
-                _TOKEN_ *TokenTMP = T_Create();                             //
-                if(TokenTMP == NULL) return 99;                             //
-                if(TypeTMP == T_TYPE_INT_DATATYPE){                         //
-                    TokenTMP->Type = T_TYPE_INT_DATATYPE;                   //
-                    TokenTMP->String = "0";                                 //
-                    Stack_Push(Wrap->Stack, TokenTMP);                      //
-                } else if(TypeTMP == T_TYPE_FLOAT_DATATYPE){                //
-                    TokenTMP->Type = T_TYPE_FLOAT_DATATYPE;                 //
-                    TokenTMP->String = "0x0p+1";                            //
-                    Stack_Push(Wrap->Stack, TokenTMP);                      //
-                } else if(TypeTMP == T_TYPE_STRING_DATATYPE){               //
-                    TokenTMP->Type = T_TYPE_INT_DATATYPE;                   //
-                    TokenTMP->String = "";                                  //
-                    Stack_Push(Wrap->Stack, TokenTMP);                      //
-                }                                                           //
-            } else return 4;                                                //
-        } else Stack_Push(Wrap->Stack, Token);                              //
-
+            if(Params->Type - 16 != ItemTMP->Type && ItemTMP->Type != T_TYPE_VARIABLE) return 4;
+        } else if(Params->Type - 16 != Token->Type) return 4;               //
+        Wrap->Stack = G_Stack_Push(Wrap->Stack, Token);                     //
         if(Wrap->Stack == NULL) return 99;                                  //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             // Ciarka/Zatvorka
         if(Token->Type == T_TYPE_COMMA && Params->Next != NULL);            //
-        else if(Token->Type == T_TYPE_CLOSED_BRACKET && Params->Next == NULL);
-        else if(Params->Next == NULL && Token->Type == T_TYPE_COMMA) {      //
-            if((ERR = Scan(Wrap)) != 0) return ERR;                         //
-            if(Token->Type == T_TYPE_STRING_DATATYPE ||                     //
-               Token->Type == T_TYPE_FLOAT_DATATYPE ||                      //      
-               Token->Type == T_TYPE_NULL_DATATYPE ||                       //
-               Token->Type == T_TYPE_INT_DATATYPE ||                        //
-               Token->Type == T_TYPE_VARIABLE) return 4;                    //
-            else return 2;                                                  //
-        } else return 2;                                                    //
+        else if(Token->Type == T_TYPE_CLOSED_BRACKET &&                     //
+                Params->Next == NULL);                                      //
+        else return 2;                                                      //
         Params = Params->Next;                                              //
     }                                                                       //
     Wrap->Stack = G_CallParam(Wrap->Stack, Wrap->Table);                    //
-    printf("CREATEFRAME\n");                                                // ! Chybal novy riadok
+    printf("CREATEFRAME");                                                  //
     printf("CALL func$%s\n", Name);                                         //
 
     if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Bodkociarka
@@ -493,10 +430,7 @@ int Variable(_WRAP_ *Wrap){
     char *Name = Token->String;                                             //
     Token_Type Type = Token->Type;                                          //
 
-    if(Wrap->Character != ')') {
-        if((ERR = Scan(Wrap)) != 0) return ERR;                             // Rovna sa
-    }
-    
+    if((ERR = Scan(Wrap)) != 0) return ERR;                                 // Rovna sa
     if(Token->Type != T_TYPE_EQUAL) {                                       //
         int Len = -3;                                                       //
         if(Token->Type == T_TYPE_TRIPLE_EQUALS_NEG || Token->Type == T_TYPE_TRIPLE_EQUALS) Len = -5;
@@ -522,12 +456,8 @@ int Variable(_WRAP_ *Wrap){
         if((ERR = Scan(Wrap)) != 0) return ERR;                             //
         _ITEMV_ *TMP3 = SearchV(&Wrap->Table->Local, Name);                 //
         if(Token->Type == T_TYPE_KEYWORD) {                                 //
-            Token_Keyword TMP = Token->Keyword;                             //
-            if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
-            Token->Keyword = TMP;                                           //
             if(Token->Keyword == T_KEYWORD_CHR ||                           //
                Token->Keyword == T_KEYWORD_STRVAL ||                        //
-               Token->Keyword == T_KEYWORD_SUBSTRING ||                     //
                Token->Keyword == T_KEYWORD_READS) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE, Wrap->Dive);
             else if(Token->Keyword == T_KEYWORD_INTVAL ||                   //
                     Token->Keyword == T_KEYWORD_ORD ||                      //
@@ -536,6 +466,7 @@ int Variable(_WRAP_ *Wrap){
             else if(Token->Keyword == T_KEYWORD_READF ||                    //
                     Token->Keyword == T_KEYWORD_FLOATVAL) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, Wrap->Dive);
             else return 2;                                                  //
+            if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
             if(TMP3 == NULL) G_RetVal(Name, Wrap->Dive);                    //
             else printf("POPS LF@%s$%i\n", TMP3->Name, TMP3->Dive);
             return 0;                                                       //
@@ -550,14 +481,12 @@ int Variable(_WRAP_ *Wrap){
                 if(ERR == 100) InsertV(&Wrap->Table->Local, Name, T_TYPE_INT_DATATYPE, Wrap->Dive);
                 else if(ERR == 200) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, Wrap->Dive);
                 else if(ERR == 300) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE, Wrap->Dive);
-                else if(ERR == 400) InsertV(&Wrap->Table->Local, Name, T_TYPE_NULL_DATATYPE, Wrap->Dive);
                 else return ERR;                                            //
                 G_RetVal(Name, Wrap->Dive);                                 //
             } else {                                                        //
                 if(ERR == 100) InsertV(&Wrap->Table->Local, Name, T_TYPE_INT_DATATYPE, TMP3->Dive);
                 else if(ERR == 200) InsertV(&Wrap->Table->Local, Name, T_TYPE_FLOAT_DATATYPE, TMP3->Dive);
                 else if(ERR == 300) InsertV(&Wrap->Table->Local, Name, T_TYPE_STRING_DATATYPE, TMP3->Dive);
-                else if(ERR == 400) InsertV(&Wrap->Table->Local, Name, T_TYPE_NULL_DATATYPE, Wrap->Dive);
                 else return ERR;                                            //
                 printf("POPS LF@%s$%i\n", TMP3->Name, TMP3->Dive);          //
             }                                                               //
@@ -574,26 +503,22 @@ int Variable(_WRAP_ *Wrap){
 int Start(_WRAP_ *Wrap){
     int ERR;                                                                // Deklaracia
     int IF = 0;                                                             //
-    int Semi = 1;                                                           //
     _TOKEN_ *Token = Wrap->Token;                                           //
 
     while(Token->Type != T_TYPE_EOF) {                                      // Spracuje Zaciatocne Tokeny
-        if(Wrap->Character == '\n') Semi = 0;                               //
         if((ERR = Scan(Wrap)) != 0) return ERR;                             //
-        if(Semi == 0 && Token->Type == T_TYPE_SEMICOLON) return 2;          //
 
         if(IF == 1 && Token->Keyword != T_KEYWORD_IF) IF = 0;               // Overenie IF
         else if(IF == 0 && Token->Keyword == T_KEYWORD_IF) IF = 1;          //
         else if(IF == 0 && Token->Keyword == T_KEYWORD_ELSE) return 2;      //
-
+        
         if(Token->Type == T_TYPE_KEYWORD) {                                 // Keywordy
             if((ERR = Keyword(Wrap)) != 0) return ERR;                      //
         } else if(Token->Type == T_TYPE_FUNCTION) {                         // Volanie Funkcie
             if((ERR = Function(Wrap)) != 0) return ERR;                     //
         } else if(Token->Type == T_TYPE_VARIABLE) {                         // Premenna
             if((ERR = Variable(Wrap)) != 0) return ERR;                     //
-        } else if(Term(Token->Type) == 0 ||                                 // Vyraz
-                  Token->Type == T_TYPE_OPEN_BRACKET) {                     //
+        } else if(Term(Token->Type) == 0) {                                 // Vyraz
             if((ERR = Expression(Wrap, 0)) < 100 && ERR != 0) return ERR;   //
         }                                                                   //
         else if(Token->Type != T_TYPE_SEMICOLON && Token->Type != T_TYPE_EOF) {
@@ -602,7 +527,7 @@ int Start(_WRAP_ *Wrap){
             else return 0;                                                  //
         }                                                                   //
     }                                                                       //
- 
+
     if(Wrap->Dive != 0) return 2;
 
     return 0;
@@ -638,9 +563,7 @@ int main(){
 
     Wrap->Source;                                                           // Vstup
     Wrap->Source = stdin;
-
-    if(!(Wrap->Source = fopen("qwfdsdafv.txt", "r"))) Wrap->Source = stdin; // ! Odstranit
-
+    
     int ERR = Prolog(Wrap);                                                 // Prolog
     if(ERR != 0) {                                                          //
         ERR_Handler(ERR, Line);                                             //

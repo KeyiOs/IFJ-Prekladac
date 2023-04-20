@@ -64,23 +64,23 @@ void G_Param(_PARAM_ *param);
 void G_IfGen();
 
 /// generovanie vyhodnotenia pre IF
-void G_IfStart(_WRAP_ *Wrap);
+void G_IfStart();
 
 /// generovanie else z IF
-void G_Else(_WRAP_ *Wrap);
+void G_Else();
 
 /// generovanie koniec z IF
-void G_IfEnd(_WRAP_ *Wrap);
+void G_IfEnd();
 
 /// Generovanie FOR - kontrola podmienok
 /// @param expression - podmienka
 void G_WhileStart();
 
 /// Generovanie FOR - skok na koniec
-void G_WhileJump(_WRAP_ *Wrap);
+void G_WhileJump();
 
 /// Generovanie FOR - koniec
-void G_WhileEnd(_WRAP_ *Wrap);
+void G_WhileEnd();
 
 /// Generovanie RETURN
 void G_Return();
@@ -89,7 +89,7 @@ void G_ADD(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_SUB(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_CON(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_MUL(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
-int G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
+void G_DIV(_WRAP_ *Wrap, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_EQ(_WRAP_ *Wrap, int EQ, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_SM(_WRAP_ *Wrap, int SMEQ, _TOKEN_ Val1, _TOKEN_ Val2);
 void G_GT(_WRAP_ *Wrap, int GTEQ, _TOKEN_ Val1, _TOKEN_ Val2);
@@ -127,8 +127,6 @@ void G_strval();
 void G_strlen();
 
 void G_substring();
-
-void G_concat();
 
 void G_ord();
 

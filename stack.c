@@ -49,11 +49,6 @@ _STACK_ *Stack_Pop(_STACK_ *Stack) {
 
 _STACK_ *G_Stack_Push (_STACK_ *Stack, _TOKEN_ *Token) {
     if(Stack->Token.Type == T_TYPE_NULL) {
-        if(Token->Type == T_TYPE_NULL_DATATYPE) {
-            Token->Type = T_TYPE_INT_DATATYPE;
-            Token->String = "0";
-            Token->Keyword = T_KEYWORD_NULL;
-        }
         Stack->Token = *Token;
     } else {
         _STACK_ *Stack_New = Stack;

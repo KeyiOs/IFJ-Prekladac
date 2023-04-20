@@ -12,8 +12,9 @@
 #include <stdlib.h>
 
 extern int Line;
+extern int Token_Number;
 
-int Strings(_WRAP_ *Wrap, int Type){    
+int Strings(_WRAP_ *Wrap, char *String, int Type){    
     char *StringNew = (char*) malloc(1000*sizeof(char));
     if(StringNew == NULL) return 99;
 
@@ -25,27 +26,12 @@ int Strings(_WRAP_ *Wrap, int Type){
             Wrap->Character = getc(Wrap->Source);
             while(Wrap->Character != '"'){
                 if(Wrap->Character == '$') return 1; // $ Moze byt v stringu iba cez escape sekvenciu
-                else if(Wrap->Character == '\\'){
+                if(Wrap->Character == '\\'){
                     Wrap->Character = getc(Wrap->Source);
-                    if(Wrap->Character == '"'){
+                    if(Wrap->Character == '"' || Wrap->Character == '\\'){
                         StringNew[Length] = '\\';
                         Length++;
-                        StringNew[Length] = '0';
-                        Length++;
-                        StringNew[Length] = '3';
-                        Length++;
-                        StringNew[Length] = '4';
-                        Length++;
-                        Wrap->Character = getc(Wrap->Source);
-                        continue;
-                    } else if(Wrap->Character == '\\'){
-                        StringNew[Length] = '\\';
-                        Length++;
-                        StringNew[Length] = '0';
-                        Length++;
-                        StringNew[Length] = '9';
-                        Length++;
-                        StringNew[Length] = '2';
+                        StringNew[Length] = Wrap->Character;
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
@@ -68,17 +54,6 @@ int Strings(_WRAP_ *Wrap, int Type){
                         StringNew[Length] = '0';
                         Length++;
                         StringNew[Length] = '9';
-                        Length++;
-                        Wrap->Character = getc(Wrap->Source);
-                        continue;
-                    } else if(Wrap->Character == '$'){
-                        StringNew[Length] = '\\';
-                        Length++;
-                        StringNew[Length] = '0';
-                        Length++;
-                        StringNew[Length] = '3';
-                        Length++;
-                        StringNew[Length] = '6';
                         Length++;
                         Wrap->Character = getc(Wrap->Source);
                         continue;
@@ -116,24 +91,17 @@ int Strings(_WRAP_ *Wrap, int Type){
                         }
 
                         int Converted = ES[0] * 16 + ES[1];
+                        if(32 > Converted || Converted > 126) return 1;
 
-                        for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
-
-                        StringNew[Length] = '\\';
-                        Length++;
-                        StringNew[Length] = (Converted/100)+48;
-                        Length++;
-                        StringNew[Length] = ((Converted%100)/10)+48;
-                        Length++;
-                        StringNew[Length] = ((Converted%100)%10)+48;
+                        StringNew[Length] = Converted;
                         Length++;
                         continue;
-                    } else if('0' <= Wrap->Character && Wrap->Character <= '3'){  // Desiatkova escape sekvencia
+                    } else if('0' <= Wrap->Character && Wrap->Character <= '2'){  // Desiatkova escape sekvencia
                         int ES[] = {'\0','\0','\0'}; // ES - Escape Sekvence
                         int Flag = 0;   // Neplatna escape sekvencia
 
                         for(int a = 0; a < 3; a++){
-                            if(48 > Wrap->Character || Wrap->Character > 55){
+                            if(48 > Wrap->Character || Wrap->Character > 57){
                                 Flag = 1;
                                 StringNew[Length] = 92;
                                 Length++;
@@ -152,25 +120,20 @@ int Strings(_WRAP_ *Wrap, int Type){
                         }
                         if(Flag == 1) continue;
 
-                        int Converted = (ES[0] - 48) * 64 + (ES[1] - 48) * 8 + (ES[2] - 48);
+                        int Converted = (ES[0] - 48) * 100 + (ES[1] - 48) * 10 + (ES[2] - 48);
+                        if(32 > Converted || Converted > 126) return 1;
 
-                        for(int i=0; i<10; i++) StringNew[Length+i] = '\0';
-
-                        StringNew[Length] = '\\';
-                        Length++;
-                        StringNew[Length] = (Converted/100)+48;
-                        Length++;
-                        StringNew[Length] = ((Converted%100)/10)+48;
-                        Length++;
-                        StringNew[Length] = ((Converted%100)%10)+48;
+                        StringNew[Length] = Converted;
                         Length++;
                         continue;
                     } else{
-                        StringNew[Length] = Wrap->Character;
-                        Length++;
+                        StringNew[Length] = '\\';
+                        StringNew[Length+1] = Wrap->Character;
+                        Length += 2;
                         Wrap->Character = getc(Wrap->Source);
                     }
-                } else if(Wrap->Character == ' ') {
+                }
+                if(Wrap->Character == ' ') {
                     StringNew[Length] = '\\';
                     Length++;
                     StringNew[Length] = '0';
@@ -179,8 +142,7 @@ int Strings(_WRAP_ *Wrap, int Type){
                     Length++;
                     StringNew[Length] = '2';
                     Length++;
-                } else if(Wrap->Character == EOF) return 1;
-                else {
+                } else {
                     StringNew[Length] = Wrap->Character;
                     Length++;
                 }
@@ -199,10 +161,8 @@ int Strings(_WRAP_ *Wrap, int Type){
         case 2: // Premenna
         case 4: // Funkcie && Klucove slova
             if(Type == 2) Wrap->Character = getc(Wrap->Source);
-            if((65 > Wrap->Character || Wrap->Character > 90) &&
-               (97 > Wrap->Character || Wrap->Character > 122) && Wrap->Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Chybny prvy symbol
-            while((47 < Wrap->Character && Wrap->Character < 58) || (64 < Wrap->Character && Wrap->Character < 91) ||
-                  (96 < Wrap->Character && Wrap->Character < 123) || Wrap->Character == '_'){
+            if((65 > Wrap->Character || Wrap->Character > 90) && (97 > Wrap->Character || Wrap->Character > 122) && Wrap->Character != '_') return 1; // ((!= A-Z) && (!= a-z) && != '_') -> Chybny prvy symbol
+            while((47 < Wrap->Character && Wrap->Character < 58) || (64 < Wrap->Character && Wrap->Character < 91) || (96 < Wrap->Character && Wrap->Character < 123) || Wrap->Character == '_'){
                 if(Length%10 == 9) {
                     StringNew = (char*) realloc(StringNew, Length+10);
                     if(StringNew == NULL) return 99;
@@ -255,15 +215,14 @@ int Strings(_WRAP_ *Wrap, int Type){
             break;
     }
 
-    char *String = NULL;
     if(Type != 3){
-        String = malloc((Length+1)*sizeof(char));
+        String = NULL;
+        String = (char*) malloc(Length*sizeof(char));
         if(String == NULL) return 99;
-        for(int i=0; i<Length+1; i++) String[i] = '\0';
+        for(int i=0; i<Length; i++) String[i] = '\0';
 
-        strcpy(String,StringNew);          
+        strcpy(String,StringNew);
     }
-
     if(Type == 1) Wrap->Token = T_Assign(Wrap->Token, T_TYPE_STRING_DATATYPE, String, 0);
     else if(Type == 2) Wrap->Token = T_Assign(Wrap->Token, T_TYPE_VARIABLE, String, 0);
     else if(Type == 3 || Type == 4){
@@ -271,7 +230,6 @@ int Strings(_WRAP_ *Wrap, int Type){
         else Wrap->Token = T_Assign(Wrap->Token, T_TYPE_KEYWORD, String, KeyWord);
     }
     free(StringNew);
-    free(String);
 
     return 0;
 }
@@ -289,39 +247,45 @@ int Prolog(_WRAP_ *Wrap){
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         Length++;
     }
-    if(strcmp(String,"<?php")) {    
+    if(strcmp(String,"<?php")) {
         free(String);
         return 2;
     }
 
+    while(Wrap->Character == ' ' || Wrap->Character == 9) if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+    if(Wrap->Character == 10 || Wrap->Character == 13) {
+        if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+        if(Wrap->Character == 10 && (Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+        Line++;
+    } else if(Wrap->Character == '/') {
+        int cmnt;
+        if((cmnt = Comment(Wrap)) == 0) return 2;
+        else if(cmnt == 100) {
+            if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
+            Line++;
+        } else return cmnt;
+    }
+
     Length = 0;
     for(int i=0; i<25; i++) String[Length+i] = '\0';
-    while(Wrap->Character != EOF && Length != 24) {
-        while((Length == 0 || Length == 7 || Length == 8 || (Length >= 20 && Length <= 24)) && (Wrap->Character == ' ' || Wrap->Character == 9 || Wrap->Character == 10 || Wrap->Character == 13 || Wrap->Character == '/')) {   // ! Pridana podmienka pre novy riadok
-            if(Wrap->Character == 10 || Wrap->Character == 13) Line++;
-            else if(Wrap->Character == '/') {
-                int cmnt;
-                if((cmnt = Comment(Wrap)) == 0) return 2;
-                else if(cmnt == 100) Line++;
-                else return cmnt;
-            }
-            if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
-        }
+    while(Wrap->Character != ' ' && Wrap->Character != 9 && Wrap->Character != 10 && Wrap->Character != 13 && Wrap->Character != EOF && Length != 25) {
         String[Length] = Wrap->Character;
         if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         Length++;
     }
-    if(strcmp(String,"declare(strict_types=1);")) {
+    if(Length == 25) return 1;
+    else if(strcmp(String,"declare(strict_types=1);")) {
         free(String);
         return 1;
     }
 
+    if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
     return 0;
 }
 
 int Comment(_WRAP_ *Wrap){
     if(Wrap->Character == '/'){   // Riadkovy komentar
-        while(Wrap->Character != EOF && Wrap->Character != 10 && Wrap->Character != 13) if((Wrap->Character = getc(Wrap->Source)) == -1 && Wrap->Character != EOF) return 1;
+        while(Wrap->Character != EOF && Wrap->Character != 10 && Wrap->Character != 13) if((Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         if(Wrap->Character == 13 && (Wrap->Character = getc(Wrap->Source)) == -1) return 1;
         return 100;
     }
@@ -334,7 +298,6 @@ int Comment(_WRAP_ *Wrap){
                     Wrap->Character = getc(Wrap->Source);
                     return 100;
                 }
-                Line++;
             } else if(Wrap->Character == 10 || Wrap->Character == 13) Line++;
         }
     }
@@ -372,12 +335,12 @@ int Scan(_WRAP_ *Wrap){
             return 0;
             break;
         case '"':   // String
-            ERR = Strings(Wrap, 1);
+            ERR = Strings(Wrap, String, 1);
             if(ERR != 0) return ERR;
             return 0;
             break;
         case '$':   // Premenna
-            ERR = Strings(Wrap, 2);
+            ERR = Strings(Wrap, String, 2);
             if(ERR != 0) return ERR;
             return 0;
             break;
@@ -443,6 +406,7 @@ int Scan(_WRAP_ *Wrap){
                 break;
             }
             Wrap->Token = T_Assign(Wrap->Token, T_TYPE_SMALLER, String, 0);
+            Wrap->Character = getc(Wrap->Source);
             return 0;
             break;
         case '=':
@@ -467,6 +431,7 @@ int Scan(_WRAP_ *Wrap){
                 break;
             }
             Wrap->Token = T_Assign(Wrap->Token, T_TYPE_GREATER, String, 0);
+            Wrap->Character = getc(Wrap->Source);
             return 0;
             break;
         case '?':   // Datovy typ
@@ -479,7 +444,7 @@ int Scan(_WRAP_ *Wrap){
                 }
                 return 1;
             }
-            ERR = Strings(Wrap, 3);
+            ERR = Strings(Wrap, String, 3);
             if(ERR != 0) return ERR;
             return 0;
             break;
@@ -495,44 +460,32 @@ int Scan(_WRAP_ *Wrap){
             break;
         case '0' ... '9': {   // Integer alebo float
             int Float = 0;
-            int Exp = 0;
             int Len = 0;
-            String = malloc(40);
+            String = malloc(10);
             if(String == NULL) return 99;
-            memset(String, '\0', 40);
-            while((48 <= Wrap->Character && Wrap->Character <= 57) || Wrap->Character == '.' || Wrap->Character == 'e' || Wrap->Character == 'E'){
+            memset(String, '\0', 10);
+            while((48 <= Wrap->Character && Wrap->Character <= 57) || Wrap->Character == '.'){
+                if(Len%10 == 0) {
+                    String = realloc(String, sizeof(String)+10);
+                    if(String == NULL) return 99;
+                    memset(String, '\0', sizeof(String));
+                }
                 String[Len] = Wrap->Character;
                 Len++;
                 if(Wrap->Character == '.'){
                     if(Float == 0) Float = 1;
                     else return 1;
-                } else if(Wrap->Character == 'e' || Wrap->Character == 'E'){
-                    if(Float == 0 || Exp == 1) return 1;
-                    Exp = 1;
-                    Wrap->Character = getc(Wrap->Source);
-                    if(Wrap->Character == '+' || Wrap->Character == '-') Wrap->Character = getc(Wrap->Source);
-                    if(Wrap->Character < 48 || 57 < Wrap->Character) return 1;
-                    String[Len] = Wrap->Character;
-                    Len++;
                 }
                 Wrap->Character = getc(Wrap->Source);
-                if(String[Len-1] == '.' && (Wrap->Character < 48 || 57 < Wrap->Character)) return 1;
             }
             if(Float == 0) Wrap->Token = T_Assign(Wrap->Token, T_TYPE_INT_DATATYPE, String, 0);
-            else {
-                char *End;
-                double D = strtod(String, &End);
-                if(D > 1.7976931348623158E+308) return 8;
-                char TMP[40];
-                sprintf(TMP, "%a", D);
-                Wrap->Token = T_Assign(Wrap->Token, T_TYPE_FLOAT_DATATYPE, TMP, 0);
-            }
+            else Wrap->Token = T_Assign(Wrap->Token, T_TYPE_FLOAT_DATATYPE, String, 0);
             return 0;
             break;
         }
         case 'a' ... 'z':
         case 'A' ... 'Z':
-            ERR = Strings(Wrap, 4);
+            ERR = Strings(Wrap, String, 4);
             if(ERR != 0) return ERR;
             return 0;
             break;

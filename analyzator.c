@@ -9,8 +9,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-extern int Line;
-
 /*
  *  • Vrati uroven precedencie tokenu
  */
@@ -136,9 +134,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             } else if(Wrap->Token->Type == T_TYPE_STRING_DATATYPE){
                 if(Return < 100) Return = 300;                                  // Do premennej priradime po skonceni STRING
                 else if(Return < 300) return 7;                                 // Chyba typovej kompatibility
-            } else if(Wrap->Token->Type == T_TYPE_NULL_DATATYPE){
-                if(Return == 0) Return = 400;                                   // Do premennej priradime po skonceni NULL
-            }
+            } else if(Wrap->Token->Type == T_TYPE_NULL_DATATYPE);
         } else if(CurrentT_Type == T_VAL) {
             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Wrap->Token->String);
             if(TMP->Type == T_TYPE_INT_DATATYPE) {
@@ -150,13 +146,11 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             } else if(TMP->Type == T_TYPE_STRING_DATATYPE){
                 if(Return < 100) Return = 300;                                  // Do premennej priradime po skonceni STRING
                 else if(Return < 300) return 7;                                 // Chyba typovej kompatibility
-            } else if(Wrap->Token->Type == T_TYPE_NULL_DATATYPE){
-                if(Return == 0) Return = 400;                                   // Do premennej priradime po skonceni NULL
-            }
+            } else if(TMP->Type == T_TYPE_NULL_DATATYPE);
         }
 
-        if(Return == 300 && (CurrentT_Type < T_EQ && Wrap->Token->Type != T_TYPE_CONCATENATION)) return 7;  // Neplatna operacia pre stringy
-        else if(Return < 300 && Wrap->Token->Type == T_TYPE_CONCATENATION) return 7;    // Nemame STRING ale dostali sme CONCAT
+        if(Return == 300 && (CurrentT_Type < T_EQ && Wrap->Token->Type != T_TYPE_CONCATENATION)) return 2;  // Neplatna operacia pre stringy
+        else if(Return < 300 && Wrap->Token->Type == T_TYPE_CONCATENATION) return 2;    // Nemame STRING ale dostali sme CONCAT
 
         switch(Relation(StackTerminal, CurrentT_Type)){   // Vyhodnoty vztah medzi terminalmi
             case StackPush:
@@ -166,8 +160,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
             case StackProcess:
                 if(Get_Precedence(Stack->Token.Type) == T_VAL){     // Vytvorenie nahradneho tokenu pre spracovanu cast vyrazu
                     TokenTMP.Keyword = T_KEYWORD_EMPTY;
-                    if(Return == 100) TokenTMP.Type = T_TYPE_INT_DATATYPE;
-                    else if(Return == 200) TokenTMP.Type = T_TYPE_FLOAT_DATATYPE;
+                    if(Return < 300) TokenTMP.Type = T_TYPE_FLOAT_DATATYPE;
                     else TokenTMP.Type = T_TYPE_STRING_DATATYPE;
                     TokenTMP.String = "$";
                 } else return 2;
@@ -175,76 +168,17 @@ int Expression(_WRAP_ *Wrap, int Condition) {
                 int String = 0;
                 _TOKEN_ Symbol;
                 for(int i = 0; i < 3; i++) {
-                    if(i == 0) {
-                        Val2 = Stack->Token;
-                        if(Val2.Keyword != T_KEYWORD_EMPTY) {
-                            if(Return == 200 && Val2.Type == T_TYPE_INT_DATATYPE) {
-                                char *End;
-                                double D = strtod(Val2.String, &End);
-                                if(D > 1.7976931348623158E+308) return 8;
-                                char TMP[40];
-                                sprintf(TMP, "%a", D);
-                                _TOKEN_ *Val2P = T_Create();
-                                if(Val2P == NULL) return 99;
-                                Val2P = T_Assign(Val2P, T_TYPE_FLOAT_DATATYPE, TMP, 0);
-                                Val2 = *Val2P;
-                            } else if(Val2.Type == T_TYPE_VARIABLE) {
-                                _ITEMV_ *ItemTMP = SearchV(&Wrap->Table->Local, Val2.String);
-                                if(ItemTMP == NULL) return 5;
-                                else if(Return == 200 && ItemTMP->Type == T_TYPE_INT_DATATYPE){
-                                    printf("PUSHS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);
-                                    printf("CREATEFRAME\n");
-                                    printf("CALL func$floatval\n");
-                                    printf("POPS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);
-                                    ItemTMP->Type = T_TYPE_FLOAT_DATATYPE;
-                                }
-                            }
-                        }
-                    }
-                    else if(i == 1) {
-                        Symbol = Stack->Token;
-                    }
-                    else if(i == 2) {
-                        Val1 = Stack->Token;
-                        if(Val1.Keyword != T_KEYWORD_EMPTY) {
-                            if(Return == 200 && Val1.Type == T_TYPE_INT_DATATYPE) {
-                                char *End;
-                                double D = strtod(Val1.String, &End);
-                                if(D > 1.7976931348623158E+308) return 8;
-                                char TMP[40];
-                                sprintf(TMP, "%a", D);
-                                _TOKEN_ *Val1P = T_Create();
-                                if(Val1P == NULL) return 99;
-                                Val1P = T_Assign(Val1P, T_TYPE_FLOAT_DATATYPE, TMP, 0);
-                                Val1 = *Val1P;
-                            } else if(Val1.Type == T_TYPE_VARIABLE) {
-                                _ITEMV_ *ItemTMP = SearchV(&Wrap->Table->Local, Val1.String);
-                                if(ItemTMP == NULL) return 5;
-                                else if(Return == 200 && ItemTMP->Type == T_TYPE_INT_DATATYPE){
-                                    printf("PUSHS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);
-                                    printf("CREATEFRAME\n");
-                                    printf("CALL func$floatval\n");
-                                    printf("POPS LF@%s$%i\n", ItemTMP->Name, ItemTMP->Dive);
-                                    ItemTMP->Type = T_TYPE_FLOAT_DATATYPE;
-                                }
-                            }
-                        }
-                    }
+                    if(i == 0) Val2 = Stack->Token;
+                    else if(i == 1) Symbol = Stack->Token;
+                    else if(i == 2) Val1 = Stack->Token;
                     Stack = Stack_Pop(Stack);
                 }
-                if(Val1.Type == T_TYPE_FLOAT_DATATYPE && Val2.Type == T_TYPE_FLOAT_DATATYPE) TokenTMP.Type = T_TYPE_FLOAT_DATATYPE;
-                else if(Val1.Type == T_TYPE_FLOAT_DATATYPE && Val2.Type == T_TYPE_INT_DATATYPE) TokenTMP.Type = T_TYPE_FLOAT_DATATYPE;
-                else if(Val1.Type == T_TYPE_INT_DATATYPE && Val2.Type == T_TYPE_FLOAT_DATATYPE) TokenTMP.Type = T_TYPE_FLOAT_DATATYPE;
-                else if(Val1.Type == T_TYPE_INT_DATATYPE && Val2.Type == T_TYPE_INT_DATATYPE) TokenTMP.Type = T_TYPE_INT_DATATYPE;
                 Stack_Push(Stack, &TokenTMP);   // Vlozenie nahradneho tokenu na stak
-                printf("CREATEFRAME\n");
                 if(Symbol.Type == T_TYPE_PLUS) G_ADD(Wrap, Val1, Val2);
                 else if(Symbol.Type == T_TYPE_MINUS) G_SUB(Wrap, Val1, Val2);
                 else if(Symbol.Type == T_TYPE_CONCATENATION) G_CON(Wrap, Val1, Val2);
                 else if(Symbol.Type == T_TYPE_MULTIPLICATION) G_MUL(Wrap, Val1, Val2);
-                else if(Symbol.Type == T_TYPE_DIVISION) {
-                    if((ERR = G_DIV(Wrap, Val1, Val2)) != 0) return ERR;
-                }
+                else if(Symbol.Type == T_TYPE_DIVISION) G_DIV(Wrap, Val1, Val2);
                 else if(Symbol.Type == T_TYPE_TRIPLE_EQUALS) {
                     if(Return == 300) G_EQ(Wrap, 1, Val1, Val2);
                     else G_EQ(Wrap, 1, Val1, Val2);
@@ -279,7 +213,6 @@ int Expression(_WRAP_ *Wrap, int Condition) {
                         if(Stack->Token.Type == T_TYPE_INT_DATATYPE) printf("PUSHS int@%s\n", Stack->Token.String);
                         else if(Stack->Token.Type == T_TYPE_FLOAT_DATATYPE) printf("PUSHS float@%s\n", Stack->Token.String);
                         else if(Stack->Token.Type == T_TYPE_STRING_DATATYPE) printf("PUSHS string@%s\n", Stack->Token.String);
-                        else if(Stack->Token.Type == T_TYPE_NULL_DATATYPE) printf("PUSHS nil@nil\n");
                         else if(Stack->Token.Type == T_TYPE_VARIABLE){
                             _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Stack->Token.String);
                             printf("PUSHS LF@%s$%i\n", Stack->Token.String, TMP->Dive);
@@ -291,63 +224,7 @@ int Expression(_WRAP_ *Wrap, int Condition) {
                         if(Stack->Token.Type == T_TYPE_NULL && Brackets == 0) return Return;    // Spravne se doslo az na konec vyrazu
                         else return 2;                                                          // Zly pocet zatvoriek
                     } else return 2;
-                } else if(StackTerminal == T_DOLLAR && CurrentT_Type == T_RB && Condition == 1) {
-                    if(strcmp(Stack->Token.String, "$") != 0) {
-                        if(Stack->Token.Type == T_TYPE_INT_DATATYPE) {
-                            printf("PUSHS int@%s\n", Stack->Token.String);
-                            printf("PUSHS int@0\n");
-                            printf("EQS\n");
-                            printf("PUSHS bool@false\n");
-                            printf("EQS\n");
-                        } else if(Stack->Token.Type == T_TYPE_FLOAT_DATATYPE) {
-                            printf("PUSHS float@%s\n", Stack->Token.String);
-                            printf("PUSHS float@%a\n", 0);
-                            printf("EQS\n");
-                            printf("PUSHS bool@false\n");
-                            printf("EQS\n");
-                        } else if(Stack->Token.Type == T_TYPE_STRING_DATATYPE) {
-                                printf("PUSHS string@%s\n", Stack->Token.String);
-                                printf("PUSHS string@0\n");
-                                printf("EQS\n");
-                                printf("PUSHS string@%s\n", Stack->Token.String);
-                                printf("PUSHS string@\n");
-                                printf("EQS\n");
-                                printf("EQS\n");
-                        } else if(Stack->Token.Type == T_TYPE_NULL_DATATYPE) printf("PUSHS bool@false\n");
-                        else if(Stack->Token.Type == T_TYPE_VARIABLE){
-                            _ITEMV_ *TMP = SearchV(&Wrap->Table->Local, Stack->Token.String);
-                            if(TMP->Type == T_TYPE_NULL_DATATYPE) printf("PUSHS bool@false\n");
-                            else if(TMP->Type == T_TYPE_INT_DATATYPE) {
-                                printf("PUSHS LF@%s$%i\n", TMP->Name, TMP->Dive);
-                                printf("PUSHS int@0\n");
-                                printf("EQS\n");
-                                printf("PUSHS bool@false\n");
-                                printf("EQS\n");
-                            } else if(TMP->Type == T_TYPE_STRING_DATATYPE) {
-                                printf("PUSHS LF@%s$%i\n", TMP->Name, TMP->Dive);
-                                printf("PUSHS string@0\n");
-                                printf("EQS\n");
-                                printf("PUSHS LF@%s$%i\n", TMP->Name, TMP->Dive);
-                                printf("PUSHS string@\n");
-                                printf("EQS\n");
-                                printf("EQS\n");
-                                printf("PUSHS LF@%s$%i\n", TMP->Name, TMP->Dive);
-                                printf("PUSHS nil@nil\n");
-                                printf("EQS\n");
-                                printf("EQS\n");
-                                printf("PUSHS bool@false\n");
-                                printf("EQS\n");
-                            } else if(TMP->Type == T_TYPE_FLOAT_DATATYPE) {
-                                printf("PUSHS LF@%s$%i\n", TMP->Name, TMP->Dive);
-                                printf("PUSHS float@%a\n", 0);
-                                printf("EQS\n");
-                                printf("PUSHS bool@false\n");
-                                printf("EQS\n");
-                            } else if(TMP->Type == T_TYPE_NULL_DATATYPE) printf("PUSHS bool@false\n");
-                        }
-                    }
-                    return Return;
-                }
+                } else if(StackTerminal == T_DOLLAR && CurrentT_Type == T_RB && Condition == 1) return Return;
                 else return 2;
                 break;
         }
