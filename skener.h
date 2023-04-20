@@ -15,7 +15,7 @@
 
 int Prolog(_WRAP_ *Wrap);
 int Comment(_WRAP_ *Wrap);
-int Strings(_WRAP_ *Wrap, char *String, int Type);
+int Strings(_WRAP_ *Wrap, int Type);
 int Scan(_WRAP_ *Wrap);
 
 #endif

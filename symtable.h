@@ -30,7 +30,7 @@ _ITEMV_ *DeleteV(_ITEMV_ **ItemPtr, char *Name);
 
 char *FindName(_ITEMV_ *Item, char *Name, int dive);
 
-void EditVariable(_ITEMV_ **ItemPtr, int dive);
+_ITEMV_ *EditVariable(_ITEMV_ **ItemPtr, int dive);
 
 /// -------------------------------------------------------- PARAM ----------
 // Uvolni alokovanu pamat pre parametre

@@ -129,13 +129,14 @@ char *FindName(_ITEMV_ *Item, char *Name, int dive){
     return NULL;
 }
 
-void EditVariable(_ITEMV_ **ItemPtr, int dive){
+_ITEMV_ *EditVariable(_ITEMV_ **ItemPtr, int dive){
     _ITEMV_ *Item = *ItemPtr;
     char *Name = FindName(Item, NULL, dive);
     while (Name != NULL) {
-        DeleteV(&Item, Name);
+        Item = DeleteV(&Item, Name);
         Name = FindName(Item, NULL, dive);
     }
+    return Item;
 }
 
 /// ------------------------------------------------------------------------------ VARIABLE ----------------------------
